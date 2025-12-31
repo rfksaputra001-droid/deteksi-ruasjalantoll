@@ -1,0 +1,25 @@
+{
+  "name": "kinerja-ruas-jalan-fullstack",
+  "version": "1.0.0",
+  "description": "Full-stack YOLO Traffic Detection System",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
+    "backend": "cd 'yolo-backend  final' && npm run dev",
+    "frontend": "cd kinerja-ruas-jalan && npm run dev",
+    "build:frontend": "cd kinerja-ruas-jalan && npm run build",
+    "start:backend": "cd 'yolo-backend  final' && npm start",
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd 'yolo-backend  final' && npm install",
+    "install:frontend": "cd kinerja-ruas-jalan && npm install",
+    "create-admin": "cd 'yolo-backend  final' && npm run create-admin"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "cloudinary": "^2.8.0"
+  }
+}

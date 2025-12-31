@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: yolo-detection-backend
+    runtime: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.9"
+    healthCheckPath: /api/info/health
+    disk:
+      name: backend-disk
+      mountPath: /opt/render/project/src/temp
+      sizeGB: 1
+    autoDeploy: true
+    rootDir: backend

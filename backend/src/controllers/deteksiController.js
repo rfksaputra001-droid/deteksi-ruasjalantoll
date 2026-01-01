@@ -894,8 +894,8 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 `;
 
   return new Promise((resolve, reject) => {
-    // Use environment variable for Python executable with proper path
-    const pythonExecutable = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
+    // Use python from PATH (Docker environment handles this correctly)
+    const pythonExecutable = 'python';
     
     // Enhanced environment variables for Docker
     const pythonEnv = {
@@ -914,6 +914,8 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
     };
     
     logger.info(`🐍 Using Python: ${pythonExecutable}`);
+    logger.info(`📁 Working directory: /app`);
+    logger.info(`🔧 Virtual env: ${pythonEnv.VIRTUAL_ENV}`);
     
     const python = spawn(pythonExecutable, ['-c', pythonCode], {
       timeout: 3600000, // 1 jam timeout

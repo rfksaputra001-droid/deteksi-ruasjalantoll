@@ -16,12 +16,27 @@ def setup_directories():
             '/app/.torch',
             '/app/.huggingface', 
             '/app/temp',
-            '/app/uploads'
+            '/app/uploads',
+            '/app/uploads/detections'
         ]
         
         for directory in dirs_to_create:
-            os.makedirs(directory, exist_ok=True)
-            print(f"✅ Directory created: {directory}")
+            try:
+                os.makedirs(directory, exist_ok=True, mode=0o755)
+                # Test write permissions
+                test_file = os.path.join(directory, '.test_write')
+                with open(test_file, 'w') as f:
+                    f.write('test')
+                os.remove(test_file)
+                print(f"✅ Directory ready: {directory}")
+            except Exception as dir_error:
+                print(f"⚠️ Directory issue {directory}: {dir_error}")
+                # Try alternative temp directory
+                if directory.startswith('/tmp'):
+                    alt_dir = os.path.join(tempfile.gettempdir(), directory.split('/')[-1])
+                    os.makedirs(alt_dir, exist_ok=True, mode=0o755)
+                    print(f"✅ Alternative directory: {alt_dir}")
+        
         return True
     except Exception as e:
         print(f"❌ Directory setup error: {e}")

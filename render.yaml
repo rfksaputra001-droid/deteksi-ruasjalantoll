@@ -33,7 +33,7 @@ services:
       - key: PYTHONPATH
         value: "/app:/opt/venv/lib/python3.11/site-packages"
       - key: PYTHON_EXECUTABLE
-        value: "/opt/venv/bin/python"
+        value: "python"
       - key: PATH
         value: "/opt/venv/bin:/usr/local/bin:/usr/bin:/bin"
       - key: VIRTUAL_ENV
@@ -76,6 +76,12 @@ services:
         value: "/tmp/matplotlib"
       - key: HF_HOME
         value: "/app/.huggingface"
+      - key: TEMPDIR
+        value: "/app/temp"
+      - key: MAX_VIDEO_SIZE
+        value: "5368709120"
+      - key: PROCESSING_TIMEOUT
+        value: "3600000"
     
     healthCheckPath: /health
     

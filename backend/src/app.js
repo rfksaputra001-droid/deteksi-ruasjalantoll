@@ -128,22 +128,36 @@ app.use('/api/histori', historiRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/perhitungan', perhitunganRoutes);
 
-// Serve static files from React build
-const frontendBuildPath = path.join(__dirname, '../../frontend/dist');
-app.use(express.static(frontendBuildPath));
-
-// Catch all handler: send back React's index.html file for client-side routing
+// API-only backend - frontend deployed separately on Vercel
+// Handle 404 for unknown API routes
 app.get('*', (req, res) => {
-    // Skip API routes
-    if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+    // All routes should be API routes
+    if (req.path.startsWith('/api/') || req.path === '/health' || req.path === '/') {
+        if (req.path === '/') {
+            return res.json({
+                status: 'success',
+                message: 'YOLO Detection Backend API',
+                version: '2.0',
+                endpoints: {
+                    health: '/health',
+                    info: '/api/info',
+                    auth: '/api/auth',
+                    deteksi: '/api/deteksi',
+                    dashboard: '/api/dashboard'
+                }
+            });
+        }
         return res.status(404).json({
             status: 'error',
             message: 'Route tidak ditemukan'
         });
     }
     
-    // Serve React app
-    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+    // Redirect non-API requests to frontend
+    return res.status(404).json({
+        status: 'error',
+        message: 'Backend API only - Frontend available at Vercel deployment'
+    });
 });
 
 // Global error handler

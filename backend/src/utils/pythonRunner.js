@@ -54,16 +54,27 @@ function commandExists(command) {
 function getPythonExecutable() {
   // Return cached path if already verified
   if (cachedPythonPath && commandExists(cachedPythonPath)) {
+    logger.debug(`🔄 Using cached Python: ${cachedPythonPath}`);
     return cachedPythonPath;
   }
+  
+  logger.info('🔍 Starting Python executable detection...');
+  logger.debug(`📍 Working dir: ${process.cwd()}`);
+  logger.debug(`🌍 NODE_ENV: ${process.env.NODE_ENV}`);
+  logger.debug(`📦 VIRTUAL_ENV: ${process.env.VIRTUAL_ENV}`);
   
   // ═══════════════════════════════════════════════════════════════
   // Priority 1: Environment variable (allows override)
   // ═══════════════════════════════════════════════════════════════
-  if (process.env.PYTHON_EXECUTABLE && commandExists(process.env.PYTHON_EXECUTABLE)) {
-    cachedPythonPath = process.env.PYTHON_EXECUTABLE;
-    logger.info(`✅ Using PYTHON_EXECUTABLE env: ${cachedPythonPath}`);
-    return cachedPythonPath;
+  if (process.env.PYTHON_EXECUTABLE) {
+    logger.debug(`🔧 Checking PYTHON_EXECUTABLE: ${process.env.PYTHON_EXECUTABLE}`);
+    if (commandExists(process.env.PYTHON_EXECUTABLE)) {
+      cachedPythonPath = process.env.PYTHON_EXECUTABLE;
+      logger.info(`✅ Using PYTHON_EXECUTABLE env: ${cachedPythonPath}`);
+      return cachedPythonPath;
+    } else {
+      logger.warn(`⚠️ PYTHON_EXECUTABLE not valid: ${process.env.PYTHON_EXECUTABLE}`);
+    }
   }
   
   // ═══════════════════════════════════════════════════════════════
@@ -76,8 +87,11 @@ function getPythonExecutable() {
     '/opt/venv/bin/python3.11',  // Specific version
   ];
   
+  logger.debug(`🐳 Checking Docker paths: ${dockerPaths.join(', ')}`);
   for (const pyPath of dockerPaths) {
-    if (fs.existsSync(pyPath)) {
+    const exists = fs.existsSync(pyPath);
+    logger.debug(`  ${pyPath} -> ${exists ? '✅ EXISTS' : '❌ NOT_FOUND'}`);
+    if (exists) {
       cachedPythonPath = pyPath;
       logger.info(`✅ Using Docker venv Python: ${cachedPythonPath}`);
       return cachedPythonPath;
@@ -96,8 +110,11 @@ function getPythonExecutable() {
     '/usr/bin/python',
   ];
   
+  logger.debug(`🖥️ Checking system paths: ${systemPaths.join(', ')}`);
   for (const pyPath of systemPaths) {
-    if (fs.existsSync(pyPath)) {
+    const exists = fs.existsSync(pyPath);
+    logger.debug(`  ${pyPath} -> ${exists ? '✅ EXISTS' : '❌ NOT_FOUND'}`);
+    if (exists) {
       cachedPythonPath = pyPath;
       logger.info(`✅ Using system Python: ${cachedPythonPath}`);
       return cachedPythonPath;
@@ -108,8 +125,17 @@ function getPythonExecutable() {
   // Priority 4: PATH-based fallback (last resort)
   // ═══════════════════════════════════════════════════════════════
   const pathCommands = ['python3', 'python'];
+  logger.debug(`🔍 Checking PATH commands: ${pathCommands.join(', ')}`);
   for (const cmd of pathCommands) {
-    if (commandExists(cmd)) {
+    const exists = commandExists(cmd);
+    logger.debug(`  ${cmd} -> ${exists ? '✅ EXISTS' : '❌ NOT_FOUND'}`);
+    if (exists) {
+      try {
+        const which = execSync(`which ${cmd}`, { encoding: 'utf8' }).trim();
+        logger.debug(`  which ${cmd} = ${which}`);
+      } catch (e) {
+        logger.debug(`  which ${cmd} failed: ${e.message}`);
+      }
       cachedPythonPath = cmd;
       logger.info(`✅ Using PATH Python: ${cachedPythonPath}`);
       return cachedPythonPath;
@@ -120,7 +146,14 @@ function getPythonExecutable() {
   // FALLBACK: Return python3 and hope for the best
   // ═══════════════════════════════════════════════════════════════
   logger.error('❌ No Python executable found! Using "python3" as fallback');
-  logger.error('   Checked paths:', [...dockerPaths, ...systemPaths]);
+  logger.error('   Docker paths checked:', dockerPaths);
+  logger.error('   System paths checked:', systemPaths);
+  logger.error('   PATH commands tried:', pathCommands);
+  logger.error('   Environment:');
+  logger.error('     VIRTUAL_ENV:', process.env.VIRTUAL_ENV);
+  logger.error('     PYTHONPATH:', process.env.PYTHONPATH);
+  logger.error('     PATH:', process.env.PATH?.split(':').slice(0, 10).join(':'));
+  
   return 'python3';
 }
 

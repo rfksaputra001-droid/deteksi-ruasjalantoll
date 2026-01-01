@@ -56,7 +56,8 @@ RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
 WORKDIR /app
 
 # Create virtual environment with Python 3.11
-RUN python3.11 -m venv /opt/venv
+RUN python3.11 -m venv /opt/venv && \
+    ln -sf /opt/venv/bin/python3 /opt/venv/bin/python
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Set environment variables

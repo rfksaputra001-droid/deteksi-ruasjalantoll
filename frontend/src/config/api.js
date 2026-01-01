@@ -1,8 +1,17 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// In production, use same domain (since frontend is served by backend)
+// In development, use explicit base URL from env
+const isProduction = import.meta.env.PROD;
+const API_BASE_URL = isProduction 
+  ? '' // Same domain when deployed together
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000');
 
-// Socket.IO URL (same as API but without /api path)
-export const SOCKET_URL = API_BASE_URL;
+// Socket.IO URL (same as API but without /api path)  
+export const SOCKET_URL = isProduction 
+  ? window.location.origin // Same origin for websocket in production
+  : (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000');
+
+console.log('🔧 API Config:', { isProduction, API_BASE_URL, SOCKET_URL });
 
 export const API_ENDPOINTS = {
   // Auth endpoints

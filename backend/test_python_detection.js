@@ -27,15 +27,24 @@ async function testPythonDetection() {
     // Test diagnostics
     console.log('3. Full Diagnostics:');
     const diagnostics = getDiagnostics();
-    console.log('   Available paths:');
-    Object.entries(diagnostics.availablePaths).forEach(([path, exists]) => {
+    console.log('   Path checks:');
+    Object.entries(diagnostics.pathChecks).forEach(([path, exists]) => {
       console.log(`     ${exists ? '✅' : '❌'} ${path}`);
     });
     
-    console.log('\n   Environment info:');
-    console.log(`     NODE_ENV: ${diagnostics.environment.NODE_ENV}`);
-    console.log(`     Working dir: ${diagnostics.environment.cwd}`);
-    console.log(`     Platform: ${diagnostics.environment.platform}`);
+    console.log('\n   Environment:');
+    console.log(`     PYTHON_EXECUTABLE: ${diagnostics.env.PYTHON_EXECUTABLE}`);
+    console.log(`     VIRTUAL_ENV: ${diagnostics.env.VIRTUAL_ENV}`);
+    console.log(`     PYTHONPATH: ${diagnostics.env.PYTHONPATH}`);
+    
+    console.log('\n   Directories:');
+    Object.entries(diagnostics.directories).forEach(([path, exists]) => {
+      console.log(`     ${exists ? '✅' : '❌'} ${path}`);
+    });
+    
+    console.log('\n   Detection result:');
+    console.log(`     Detected: ${diagnostics.detected}`);
+    console.log(`     Cached: ${diagnostics.cached}`);
     
   } catch (error) {
     console.error('❌ Test failed:', error.message);

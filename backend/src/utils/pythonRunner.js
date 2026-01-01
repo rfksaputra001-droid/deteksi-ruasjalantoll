@@ -87,6 +87,15 @@ function getPythonExecutable() {
     '/opt/venv/bin/python3.11',  // Specific version
   ];
   
+  // ═══════════════════════════════════════════════════════════════
+  // Priority 2b: Render.com native venv paths (fallback if Docker not used)
+  // ═══════════════════════════════════════════════════════════════
+  const renderPaths = [
+    '/opt/render/project/src/.venv/bin/python',
+    '/opt/render/project/src/.venv/bin/python3',
+    '/opt/render/project/src/.venv/bin/python3.11',
+  ];
+  
   logger.debug(`🐳 Checking Docker paths: ${dockerPaths.join(', ')}`);
   for (const pyPath of dockerPaths) {
     const exists = fs.existsSync(pyPath);
@@ -94,6 +103,17 @@ function getPythonExecutable() {
     if (exists) {
       cachedPythonPath = pyPath;
       logger.info(`✅ Using Docker venv Python: ${cachedPythonPath}`);
+      return cachedPythonPath;
+    }
+  }
+  
+  logger.debug(`🟦 Checking Render paths: ${renderPaths.join(', ')}`);
+  for (const pyPath of renderPaths) {
+    const exists = fs.existsSync(pyPath);
+    logger.debug(`  ${pyPath} -> ${exists ? '✅ EXISTS' : '❌ NOT_FOUND'}`);
+    if (exists) {
+      cachedPythonPath = pyPath;
+      logger.info(`✅ Using Render venv Python: ${cachedPythonPath}`);
       return cachedPythonPath;
     }
   }
@@ -169,18 +189,50 @@ function clearPythonCache() {
  * Get Python environment variables for spawning
  */
 function getPythonEnv() {
+  // Detect if we're in Render.com native build or Docker
+  const isRenderNative = process.env.VIRTUAL_ENV && process.env.VIRTUAL_ENV.includes('/opt/render');
+  const isDocker = fs.existsSync('/opt/venv');
+  
+  let pythonPath, virtualEnv, binPath, torchHome, hfHome;
+  
+  if (isRenderNative) {
+    // Render.com native build environment
+    pythonPath = `/opt/render/project/src/.venv/lib/python3.11/site-packages:/opt/render/project/src/backend`;
+    virtualEnv = '/opt/render/project/src/.venv';
+    binPath = '/opt/render/project/src/.venv/bin:/opt/render/project/nodes/node-22.16.0/bin:/usr/local/bin:/usr/bin:/bin';
+    torchHome = '/opt/render/project/src/backend/.torch';
+    hfHome = '/opt/render/project/src/backend/.huggingface';
+    logger.debug('🟦 Using Render.com native environment');
+  } else if (isDocker) {
+    // Docker environment
+    pythonPath = '/app:/opt/venv/lib/python3.11/site-packages';
+    virtualEnv = '/opt/venv';
+    binPath = '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin';
+    torchHome = '/app/.torch';
+    hfHome = '/app/.huggingface';
+    logger.debug('🐳 Using Docker environment');
+  } else {
+    // Local development fallback
+    pythonPath = `${process.cwd()}`;
+    virtualEnv = process.env.VIRTUAL_ENV || '';
+    binPath = process.env.PATH || '/usr/local/bin:/usr/bin:/bin';
+    torchHome = `${process.cwd()}/.torch`;
+    hfHome = `${process.cwd()}/.huggingface`;
+    logger.debug('💻 Using local development environment');
+  }
+  
   return {
     ...process.env,
-    PYTHONPATH: '/app:/opt/venv/lib/python3.11/site-packages',
+    PYTHONPATH: pythonPath,
     PYTHONDONTWRITEBYTECODE: '1',
     PYTHONUNBUFFERED: '1',
     OPENCV_LOG_LEVEL: 'ERROR',
     MPLCONFIGDIR: '/tmp/matplotlib',
     QT_QPA_PLATFORM: 'offscreen',
-    VIRTUAL_ENV: '/opt/venv',
-    PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin',
-    TORCH_HOME: '/app/.torch',
-    HF_HOME: '/app/.huggingface',
+    VIRTUAL_ENV: virtualEnv,
+    PATH: binPath,
+    TORCH_HOME: torchHome,
+    HF_HOME: hfHome,
     YOLO_VERBOSE: 'False',
     OMP_NUM_THREADS: '1',
     NUMBA_DISABLE_JIT: '1'
@@ -427,17 +479,32 @@ function getDiagnostics() {
   
   // Check all possible paths
   const pathChecks = {
+    // Docker paths
     '/opt/venv/bin/python': fs.existsSync('/opt/venv/bin/python'),
     '/opt/venv/bin/python3': fs.existsSync('/opt/venv/bin/python3'),
+    '/opt/venv/bin/python3.11': fs.existsSync('/opt/venv/bin/python3.11'),
+    // Render native paths
+    '/opt/render/project/src/.venv/bin/python': fs.existsSync('/opt/render/project/src/.venv/bin/python'),
+    '/opt/render/project/src/.venv/bin/python3': fs.existsSync('/opt/render/project/src/.venv/bin/python3'),
+    '/opt/render/project/src/.venv/bin/python3.11': fs.existsSync('/opt/render/project/src/.venv/bin/python3.11'),
+    // System paths
     '/usr/bin/python3.11': fs.existsSync('/usr/bin/python3.11'),
     '/usr/bin/python3': fs.existsSync('/usr/bin/python3'),
     '/usr/bin/python': fs.existsSync('/usr/bin/python'),
   };
   
+  const isRenderNative = process.env.VIRTUAL_ENV && process.env.VIRTUAL_ENV.includes('/opt/render');
+  const isDocker = fs.existsSync('/opt/venv');
+  
   return {
     detected: pythonExecutable,
     cached: cachedPythonPath,
     pathChecks,
+    environment: {
+      type: isRenderNative ? 'render-native' : isDocker ? 'docker' : 'local',
+      isRenderNative,
+      isDocker,
+    },
     env: {
       PYTHON_EXECUTABLE: process.env.PYTHON_EXECUTABLE,
       PYTHONPATH: process.env.PYTHONPATH,
@@ -445,11 +512,17 @@ function getDiagnostics() {
       PATH: process.env.PATH,
     },
     directories: {
+      // Docker directories
       '/opt/venv': fs.existsSync('/opt/venv'),
       '/opt/venv/bin': fs.existsSync('/opt/venv/bin'),
       '/app': fs.existsSync('/app'),
+      // Render directories
+      '/opt/render/project/src/.venv': fs.existsSync('/opt/render/project/src/.venv'),
+      '/opt/render/project/src/.venv/bin': fs.existsSync('/opt/render/project/src/.venv/bin'),
+      '/opt/render/project/src/backend': fs.existsSync('/opt/render/project/src/backend'),
     }
   };
+}
 }
 
 module.exports = {

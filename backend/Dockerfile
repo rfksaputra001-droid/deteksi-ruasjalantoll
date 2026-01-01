@@ -4,45 +4,25 @@
 # Optimized untuk Render.com deployment
 # =============================================================================
 
-# Stage 1: Python builder - compile Python dependencies
-FROM python:3.11-slim-bookworm AS python-builder
-
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
-# Install build dependencies for Python packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    gcc \
-    g++ \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Create virtual environment and install Python dependencies
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-
-COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install -r requirements.txt
-
-# =============================================================================
-# Stage 2: Production stage - Node.js + Python runtime
-# =============================================================================
-FROM node:20-bookworm-slim AS production
+# Use Node.js as base and add Python
+FROM node:20-bookworm AS production
 
 # Labels
 LABEL maintainer="your-email@example.com" \
-      version="2.0" \
+      version="2.1" \
       description="Node.js Backend with Python YOLO Detection"
 
-# Install Python 3.11 and runtime dependencies
+# Install Python 3.11 and all dependencies in one layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Python runtime
-    python3 \
-    python3-venv \
+    # Python 3.11
+    python3.11 \
+    python3.11-venv \
+    python3.11-dev \
+    python3-pip \
+    # Build tools for Python packages
+    build-essential \
+    gcc \
+    g++ \
     # === OpenCV Core Dependencies ===
     libgl1-mesa-glx \
     libglib2.0-0 \
@@ -68,14 +48,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Create symlink for python command to point to python3
-RUN ln -sf /usr/bin/python3 /usr/bin/python
+# Create symlinks for python commands
+RUN ln -sf /usr/bin/python3.11 /usr/bin/python && \
+    ln -sf /usr/bin/python3.11 /usr/bin/python3
 
 # Set working directory
 WORKDIR /app
 
-# Copy Python virtual environment from builder stage
-COPY --from=python-builder /opt/venv /opt/venv
+# Create virtual environment with Python 3.11
+RUN python3.11 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Set environment variables
 ENV NODE_ENV=production \
@@ -83,7 +65,6 @@ ENV NODE_ENV=production \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app:/opt/venv/lib/python3.11/site-packages \
     VIRTUAL_ENV=/opt/venv \
-    PATH="/opt/venv/bin:$PATH" \
     OPENCV_LOG_LEVEL=ERROR \
     QT_QPA_PLATFORM=offscreen \
     TORCH_HOME=/app/.torch \
@@ -94,26 +75,31 @@ ENV NODE_ENV=production \
 # Create necessary directories
 RUN mkdir -p /app/temp /app/uploads /app/models /app/.torch /tmp/matplotlib
 
-# Copy package files first for caching
-COPY package*.json ./
+# Copy and install Python dependencies first (for caching)
+COPY requirements.txt .
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Install Node.js dependencies
+# Copy package files and install Node.js dependencies
+COPY package*.json ./
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy application code
 COPY . .
 
-# Verify installations
+# Verify all installations
 RUN echo "=== Verifying Node.js ===" && \
     node --version && \
     echo "=== Verifying Python ===" && \
     python --version && \
     which python && \
+    echo "=== Verifying venv Python ===" && \
+    /opt/venv/bin/python --version && \
     echo "=== Verifying Python packages ===" && \
-    python -c "import cv2; print(f'✅ OpenCV {cv2.__version__}')" && \
-    python -c "import numpy as np; print(f'✅ NumPy {np.__version__}')" && \
-    python -c "from ultralytics import YOLO; print('✅ YOLO ready')" && \
-    python -c "import torch; print(f'✅ PyTorch {torch.__version__}')" && \
+    /opt/venv/bin/python -c "import cv2; print(f'✅ OpenCV {cv2.__version__}')" && \
+    /opt/venv/bin/python -c "import numpy as np; print(f'✅ NumPy {np.__version__}')" && \
+    /opt/venv/bin/python -c "from ultralytics import YOLO; print('✅ YOLO ready')" && \
+    /opt/venv/bin/python -c "import torch; print(f'✅ PyTorch {torch.__version__}')" && \
     echo "=== All verifications passed ==="
 
 # Expose port (Render uses PORT env variable)
@@ -123,5 +109,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:${PORT:-3000}/health || exit 1
 
-# Start Node.js server (Render provides PORT env variable)
+# Start Node.js server
 CMD ["node", "server.js"]

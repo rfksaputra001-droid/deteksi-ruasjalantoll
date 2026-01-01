@@ -10,93 +10,66 @@ services:
     region: singapore
     plan: starter
     
-    # Python app configuration
-    buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    # Build & start commands
+    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
+    
+    # Health check
+    healthCheckPath: /health
     
     # Environment variables
     envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: "8000"
       - key: PYTHONPATH
-        value: "."
+        value: /opt/render/project/src/backend
       
-      # YOLO/OpenCV Settings
+      # YOLO/OpenCV Settings for stability
       - key: OPENCV_LOG_LEVEL
-        value: "ERROR"
+        value: ERROR
       - key: QT_QPA_PLATFORM
-        value: "offscreen"
+        value: offscreen
       - key: YOLO_VERBOSE
         value: "False"
       - key: TORCH_HOME
-        value: "/tmp/.torch"
+        value: /tmp/.torch
       - key: NUMBA_DISABLE_JIT
         value: "1"
       - key: OMP_NUM_THREADS
         value: "1"
+      - key: MPLCONFIGDIR
+        value: /tmp/matplotlib
       
-      # Database
+      # Database - Set these in Render dashboard
+      - key: MONGODB_URI
+        sync: false
       - key: DATABASE_NAME
-        value: "yolo_detection"
+        value: yolo_detection
       
-      # JWT Settings
+      # JWT Settings - Set JWT_SECRET in Render dashboard
+      - key: JWT_SECRET
+        sync: false
       - key: JWT_ALGORITHM
-        value: "HS256"
+        value: HS256
       - key: JWT_EXPIRATION_HOURS
         value: "24"
       
-      
-      # MongoDB - use your existing connection string
-      - key: MONGODB_URI
-        fromDatabase:
-          name: mongodb-cluster
-          property: connectionString
-      - key: DB_NAME
-        value: "yolo_detection"
-      
-      # JWT Secret
-      - key: JWT_SECRET
-        generateValue: true
-      - key: JWT_EXPIRE_DAYS
-        value: "7"
-        
-      # Cloudinary - use your existing credentials
+      # Cloudinary - Set these in Render dashboard
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
-      - key: CLOUDINARY_API_KEY  
+      - key: CLOUDINARY_API_KEY
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
       - key: CLOUDINARY_FOLDER
-        value: "yolo-deteksi"
+        value: yolo-detections
       
       # CORS Settings
       - key: CORS_ORIGINS
-        value: "https://deteksi-ruasjalantoll.vercel.app,https://deteksi-ruasjalantoll-dxph.vercel.app,http://localhost:5173,http://localhost:5174"
-      - key: CLIENT_URL
-        value: "https://deteksi-ruasjalantoll.vercel.app"
+        value: "https://deteksi-ruasjalantoll.vercel.app,http://localhost:5173"
       - key: FRONTEND_URL
         value: "https://deteksi-ruasjalantoll.vercel.app"
-      - key: API_BASE_URL
-        value: "https://yolo-detection-python-api.onrender.com"
       
-      # Additional Python settings for stability
-      - key: MPLCONFIGDIR
-        value: "/tmp/matplotlib"
-      - key: TEMPDIR
-        value: "/app/temp"
+      # Processing limits
       - key: MAX_VIDEO_SIZE
-        value: "5368709120"
+        value: "104857600"
       - key: PROCESSING_TIMEOUT
-        value: "3600000"
-    
-    healthCheckPath: /health
-    
-    disk:
-      name: yolo-storage
-      mountPath: /app/temp
-      sizeGB: 2
-    
-    autoDeploy: true
+        value: "300"

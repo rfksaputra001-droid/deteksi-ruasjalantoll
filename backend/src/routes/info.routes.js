@@ -4,7 +4,7 @@ const fs = require('fs');
 const router = express.Router();
 
 // Import centralized Python runner
-const { getPythonExecutable, getPythonEnv, verifyPython } = require('../utils/pythonRunner');
+const { getPythonExecutable, getPythonEnv, verifyPython, getDiagnostics } = require('../utils/pythonRunner');
 
 // Docker Environment Debug Endpoint
 router.get('/debug', async (req, res) => {
@@ -126,6 +126,25 @@ router.get('/python-check', async (req, res) => {
       success: !verification.error,
       timestamp: new Date().toISOString(),
       python: verification
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Python diagnostics endpoint - detailed path checking
+router.get('/python-diagnostics', (req, res) => {
+  try {
+    const diagnostics = getDiagnostics();
+    
+    res.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      diagnostics
     });
   } catch (error) {
     res.status(500).json({

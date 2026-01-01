@@ -19,6 +19,26 @@ const perhitunganRoutes = require('./routes/perhitungan.routes');
 
 const app = express();
 
+// ═══════════════════════════════════════════════════════════════
+// TRUST PROXY - CRITICAL FOR RENDER.COM
+// ═══════════════════════════════════════════════════════════════
+// Render.com uses reverse proxy, so we need to trust it
+// This enables:
+// - Correct client IP detection (req.ip)
+// - Proper rate limiting per user
+// - X-Forwarded-* headers parsing
+// Value explanation:
+// - 1 = trust first proxy (Render's load balancer)
+// - 'loopback' = trust localhost
+// - true = trust all proxies (less secure)
+// ═══════════════════════════════════════════════════════════════
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1); // Trust first proxy (Render)
+  logger.info('✅ Trust proxy enabled for production (Render.com)');
+} else {
+  app.set('trust proxy', 'loopback'); // Trust localhost in dev
+}
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -66,7 +86,7 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With']
 }));
 
-// Rate limiting - more lenient for development
+// Rate limiting - configured for proxy environment
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: process.env.NODE_ENV === 'development' ? 5000 : 500, // Higher limit for development
@@ -75,8 +95,16 @@ const limiter = rateLimit({
         status: 'error',
         message: 'Terlalu banyak request dari IP ini, coba lagi nanti.'
     },
-    standardHeaders: true,
-    legacyHeaders: false,
+    standardHeaders: true,  // Return rate limit info in `RateLimit-*` headers
+    legacyHeaders: false,   // Disable `X-RateLimit-*` headers
+    // ═══════════════════════════════════════════════════════════════
+    // KEY FIX: Use proper key generator for proxy environment
+    // This ensures each user gets their own rate limit bucket
+    // ═══════════════════════════════════════════════════════════════
+    keyGenerator: (req) => {
+      // With trust proxy enabled, req.ip will be the real client IP
+      return req.ip || req.headers['x-forwarded-for']?.split(',')[0] || 'unknown';
+    },
     // Skip rate limiting in development mode
     skip: (req) => process.env.NODE_ENV === 'development'
 });

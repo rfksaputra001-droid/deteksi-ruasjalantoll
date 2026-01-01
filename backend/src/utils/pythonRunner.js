@@ -12,50 +12,124 @@
  * @module utils/pythonRunner
  */
 
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const logger = require('./logger');
 
+// ═══════════════════════════════════════════════════════════════
+// CACHED PYTHON PATH - Avoid repeated detection
+// ═══════════════════════════════════════════════════════════════
+let cachedPythonPath = null;
+
 /**
- * Get the Python executable path
+ * Check if a command exists and is executable
+ * @param {string} command - Command to check
+ * @returns {boolean}
+ */
+function commandExists(command) {
+  try {
+    // For absolute paths, check file exists
+    if (command.startsWith('/')) {
+      return fs.existsSync(command);
+    }
+    // For relative commands, try which
+    execSync(`which ${command}`, { stdio: 'pipe' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the Python executable path with ROBUST detection
  * Priority:
- * 1. PYTHON_EXECUTABLE env var
- * 2. /opt/venv/bin/python (Docker)
- * 3. System fallbacks
+ * 1. Cached path (if already found and verified)
+ * 2. PYTHON_EXECUTABLE env var
+ * 3. /opt/venv/bin/python (Docker - PRIMARY for Render)
+ * 4. /opt/venv/bin/python3 (Docker alternative)
+ * 5. System Python paths
+ * 6. PATH-based fallback
  */
 function getPythonExecutable() {
-  // Priority 1: Environment variable
-  if (process.env.PYTHON_EXECUTABLE) {
-    logger.debug(`Using PYTHON_EXECUTABLE env: ${process.env.PYTHON_EXECUTABLE}`);
-    return process.env.PYTHON_EXECUTABLE;
+  // Return cached path if already verified
+  if (cachedPythonPath && commandExists(cachedPythonPath)) {
+    return cachedPythonPath;
   }
   
-  // Priority 2: Docker venv (MOST RELIABLE for Render)
-  const dockerVenvPath = '/opt/venv/bin/python';
-  if (fs.existsSync(dockerVenvPath)) {
-    logger.debug(`Using Docker venv: ${dockerVenvPath}`);
-    return dockerVenvPath;
+  // ═══════════════════════════════════════════════════════════════
+  // Priority 1: Environment variable (allows override)
+  // ═══════════════════════════════════════════════════════════════
+  if (process.env.PYTHON_EXECUTABLE && commandExists(process.env.PYTHON_EXECUTABLE)) {
+    cachedPythonPath = process.env.PYTHON_EXECUTABLE;
+    logger.info(`✅ Using PYTHON_EXECUTABLE env: ${cachedPythonPath}`);
+    return cachedPythonPath;
   }
   
+  // ═══════════════════════════════════════════════════════════════
+  // Priority 2: Docker venv paths (CRITICAL for Render.com)
+  // These are the paths created by our Dockerfile
+  // ═══════════════════════════════════════════════════════════════
+  const dockerPaths = [
+    '/opt/venv/bin/python',      // Primary Docker venv
+    '/opt/venv/bin/python3',     // Alternative Docker venv
+    '/opt/venv/bin/python3.11',  // Specific version
+  ];
+  
+  for (const pyPath of dockerPaths) {
+    if (fs.existsSync(pyPath)) {
+      cachedPythonPath = pyPath;
+      logger.info(`✅ Using Docker venv Python: ${cachedPythonPath}`);
+      return cachedPythonPath;
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════
   // Priority 3: System Python paths (for local development)
+  // ═══════════════════════════════════════════════════════════════
   const systemPaths = [
     '/usr/bin/python3.11',
+    '/usr/bin/python3.10',
     '/usr/bin/python3',
+    '/usr/local/bin/python3.11',
     '/usr/local/bin/python3',
-    '/usr/bin/python'
+    '/usr/bin/python',
   ];
   
   for (const pyPath of systemPaths) {
     if (fs.existsSync(pyPath)) {
-      logger.debug(`Using system Python: ${pyPath}`);
-      return pyPath;
+      cachedPythonPath = pyPath;
+      logger.info(`✅ Using system Python: ${cachedPythonPath}`);
+      return cachedPythonPath;
     }
   }
   
-  // Fallback: hope it's in PATH
-  logger.warn('No Python found in known paths, using "python3" from PATH');
+  // ═══════════════════════════════════════════════════════════════
+  // Priority 4: PATH-based fallback (last resort)
+  // ═══════════════════════════════════════════════════════════════
+  const pathCommands = ['python3', 'python'];
+  for (const cmd of pathCommands) {
+    if (commandExists(cmd)) {
+      cachedPythonPath = cmd;
+      logger.info(`✅ Using PATH Python: ${cachedPythonPath}`);
+      return cachedPythonPath;
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════
+  // FALLBACK: Return python3 and hope for the best
+  // ═══════════════════════════════════════════════════════════════
+  logger.error('❌ No Python executable found! Using "python3" as fallback');
+  logger.error('   Checked paths:', [...dockerPaths, ...systemPaths]);
   return 'python3';
+}
+
+/**
+ * Clear cached Python path (useful for testing or if Python changes)
+ */
+function clearPythonCache() {
+  cachedPythonPath = null;
+  logger.debug('Python path cache cleared');
 }
 
 /**
@@ -310,11 +384,48 @@ async function checkDependencies() {
   return true;
 }
 
+/**
+ * Get comprehensive Python diagnostic info
+ * Useful for debugging Python environment issues
+ * @returns {Object} Diagnostic information
+ */
+function getDiagnostics() {
+  const pythonExecutable = getPythonExecutable();
+  
+  // Check all possible paths
+  const pathChecks = {
+    '/opt/venv/bin/python': fs.existsSync('/opt/venv/bin/python'),
+    '/opt/venv/bin/python3': fs.existsSync('/opt/venv/bin/python3'),
+    '/usr/bin/python3.11': fs.existsSync('/usr/bin/python3.11'),
+    '/usr/bin/python3': fs.existsSync('/usr/bin/python3'),
+    '/usr/bin/python': fs.existsSync('/usr/bin/python'),
+  };
+  
+  return {
+    detected: pythonExecutable,
+    cached: cachedPythonPath,
+    pathChecks,
+    env: {
+      PYTHON_EXECUTABLE: process.env.PYTHON_EXECUTABLE,
+      PYTHONPATH: process.env.PYTHONPATH,
+      VIRTUAL_ENV: process.env.VIRTUAL_ENV,
+      PATH: process.env.PATH,
+    },
+    directories: {
+      '/opt/venv': fs.existsSync('/opt/venv'),
+      '/opt/venv/bin': fs.existsSync('/opt/venv/bin'),
+      '/app': fs.existsSync('/app'),
+    }
+  };
+}
+
 module.exports = {
   getPythonExecutable,
   getPythonEnv,
   runPythonCode,
   runPythonScript,
   verifyPython,
-  checkDependencies
+  checkDependencies,
+  clearPythonCache,
+  getDiagnostics
 };

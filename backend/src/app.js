@@ -148,6 +148,7 @@ app.get('/api', (req, res) => {
 });
 
 // API Routes
+app.use('/api/info', infoRoutes);      // ✅ FIX: Add missing info routes!
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/videos', videoRoutes);

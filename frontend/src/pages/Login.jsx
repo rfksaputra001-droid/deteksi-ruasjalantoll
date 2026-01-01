@@ -25,7 +25,7 @@ export default function Login({ onLogin }) {
     console.log('Testing token:', token)
     
     try {
-      const response = await apiRequest('http://localhost:3001/api/deteksi/list')
+      const response = await apiRequest(API_ENDPOINTS.DETECTION_LIST)
       console.log('Token test result:', response)
     } catch (error) {
       console.error('Token test error:', error)
@@ -67,14 +67,20 @@ export default function Login({ onLogin }) {
           localStorage.setItem('user', JSON.stringify(data.data.user))
           
           console.log('Token stored successfully:', data.data.token.substring(0, 20) + '...')
+          console.log('User stored:', data.data.user)
           
+          // Call onLogin to update App state
           onLogin()
-          navigate('/dashboard')
+          
+          // Force navigate to dashboard
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true })
+          }, 100)
         } else {
           throw new Error('Login berhasil tapi token tidak ditemukan dalam response')
         }
       } else {
-        setError(data.message || 'Login gagal. Silakan coba lagi.')
+        setError(data.message || `API Error: ${response.status} - ${response.statusText}`)
       }
     } catch (error) {
       setError(error.message || 'Login gagal. Silakan coba lagi.')

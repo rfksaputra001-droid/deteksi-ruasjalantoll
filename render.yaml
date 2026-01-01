@@ -65,7 +65,11 @@ services:
       
       # CORS Settings
       - key: CORS_ORIGINS
-        value: "https://deteksi-ruasjalantoll.vercel.app,http://localhost:5173"
+        value: "https://deteksi-ruasjalantoll.vercel.app,https://deteksi-ruasjalantoll-dxph.vercel.app,http://localhost:5173,http://localhost:5174"
+      - key: CLIENT_URL
+        value: "https://deteksi-ruasjalantoll.vercel.app"
+      - key: FRONTEND_URL
+        value: "https://deteksi-ruasjalantoll.vercel.app"
       
       # Additional Python settings for stability
       - key: MPLCONFIGDIR

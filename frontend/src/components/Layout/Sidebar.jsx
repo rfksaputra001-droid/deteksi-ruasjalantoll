@@ -2,7 +2,8 @@ import PropTypes from 'prop-types'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
-const imgLogoPktjSmall = 'https://www.figma.com/api/mcp/asset/b36f768d-68ae-4d7c-aacf-d5e2aec1a4d0'
+// Use local logo instead of Figma URL to avoid cookie issues
+const imgLogoPktjSmall = '/logopktj-removebg-preview.png'
 const imgDashboard = 'https://www.figma.com/api/mcp/asset/f1bba751-4231-4844-aa70-3b97f428b0ad'
 const imgDeteksi = 'https://www.figma.com/api/mcp/asset/f672421c-911f-4451-aa37-d1d05d0e2587'
 const imgPerhitungan = 'https://www.figma.com/api/mcp/asset/023a91da-5e6b-4173-a698-b946cdf2f9f9'

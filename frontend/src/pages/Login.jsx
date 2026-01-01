@@ -3,12 +3,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_ENDPOINTS, apiRequest } from '../config/api'
 
-// SVG Icons to replace Figma assets and avoid cookie issues
+// Original logo from public folder
 const LogoIcon = () => (
-  <svg width="61" height="61" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="#3B82F6" stroke="white" strokeWidth="2"/>
-    <path d="M12 8V16M8 12H16" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-  </svg>
+  <img 
+    src="/logopktj-removebg-preview.png" 
+    alt="Logo PKTJ" 
+    className="w-full h-full object-contain"
+  />
 )
 
 const EmailIcon = () => (

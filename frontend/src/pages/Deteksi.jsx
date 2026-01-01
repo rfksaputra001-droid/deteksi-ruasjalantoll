@@ -220,18 +220,18 @@ export default function Deteksi({ onLogout }) {
   }, [currentPage, fetchDetections])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600 font-medium">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+          <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
         </div>
       )}
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-600 font-medium">{successMessage}</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <p className="text-green-600 font-medium text-sm sm:text-base">{successMessage}</p>
         </div>
       )}
 
@@ -312,31 +312,31 @@ export default function Deteksi({ onLogout }) {
             disabled={uploading}
           />
           <div
-            className={`${uploading ? 'bg-gray-400' : 'bg-blue-600'} text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors`}
+            className={`${uploading ? 'bg-gray-400' : 'bg-blue-600'} text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors text-sm sm:text-base`}
             style={{ display: 'inline-flex' }}
             onMouseEnter={(e) => !uploading && (e.currentTarget.style.backgroundColor = '#1d4ed8')}
             onMouseLeave={(e) => !uploading && (e.currentTarget.style.backgroundColor = uploading ? '#9ca3af' : '#2563eb')}
           >
             {uploading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <div className="w-5 h-5 text-white">
+              <div className="w-4 h-4 sm:w-5 sm:h-5 text-white">
                 <IconUpload />
               </div>
             )}
-            {uploading ? 'SEDANG MEMPROSES...' : 'UPLOAD VIDEO'}
+            {uploading ? 'MEMPROSES...' : 'UPLOAD VIDEO'}
           </div>
         </label>
       </div>
 
       {/* Video Player Box */}
       <Card className="!p-0">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-3 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">
               {selectedDetection 
                 ? (selectedDetection.isProcessing 
                     ? '🔄 Video Sedang Diproses...' 
@@ -344,40 +344,40 @@ export default function Deteksi({ onLogout }) {
                 : 'Video Player Preview'}
             </h3>
             {selectedDetection && !selectedDetection.isProcessing && selectedDetection.videoFileName && (
-              <p className="text-sm text-gray-500 mt-1">File: {selectedDetection.videoFileName}</p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1 truncate max-w-[200px] sm:max-w-none">File: {selectedDetection.videoFileName}</p>
             )}
           </div>
           {selectedDetection && !selectedDetection.isProcessing && (
             <button
               onClick={() => { setSelectedDetection(null); setVideoPreview(null); }}
-              className="text-gray-500 hover:text-gray-700 text-sm font-medium px-3 py-1 border rounded hover:bg-gray-100"
+              className="text-gray-500 hover:text-gray-700 text-xs sm:text-sm font-medium px-2 sm:px-3 py-1 border rounded hover:bg-gray-100"
             >
               ✕ Tutup
             </button>
           )}
         </div>
-        <div className="p-6 bg-gray-50">
+        <div className="p-3 sm:p-6 bg-gray-50">
           {/* Processing state - show progress spinner */}
           {selectedDetection?.isProcessing ? (
-            <div className="w-full h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <svg className="animate-spin h-16 w-16 text-blue-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div className="w-full h-64 sm:h-80 md:h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
+              <div className="text-center px-4">
+                <svg className="animate-spin h-10 w-10 sm:h-16 sm:w-16 text-blue-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p className="text-white text-xl font-semibold mb-2">🔄 Memproses Video dengan YOLO...</p>
-                <p className="text-gray-400 mb-4">Mohon tunggu, video sedang dideteksi</p>
+                <p className="text-white text-base sm:text-xl font-semibold mb-2">🔄 Memproses Video dengan YOLO...</p>
+                <p className="text-gray-400 text-sm mb-4">Mohon tunggu, video sedang dideteksi</p>
                 {selectedDetection.progress !== undefined && (
-                  <div className="w-72 mx-auto">
-                    <div className="bg-gray-700 rounded-full h-3 overflow-hidden">
+                  <div className="w-56 sm:w-72 mx-auto">
+                    <div className="bg-gray-700 rounded-full h-2 sm:h-3 overflow-hidden">
                       <div 
-                        className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-500 ease-out"
+                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 sm:h-3 rounded-full transition-all duration-500 ease-out"
                         style={{ width: `${selectedDetection.progress}%` }}
                       />
                     </div>
-                    <p className="text-blue-400 text-lg font-bold mt-3">{selectedDetection.progress}%</p>
+                    <p className="text-blue-400 text-base sm:text-lg font-bold mt-3">{selectedDetection.progress}%</p>
                     {selectedDetection.frameProgress && (
-                      <p className="text-gray-500 text-sm">Frame: {selectedDetection.frameProgress}%</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">Frame: {selectedDetection.frameProgress}%</p>
                     )}
                   </div>
                 )}
@@ -387,14 +387,14 @@ export default function Deteksi({ onLogout }) {
             <div className="space-y-4">
               <div className="relative">
                 {/* Label video - hijau untuk hasil YOLO */}
-                <div className="absolute top-2 left-2 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium z-10">
+                <div className="absolute top-2 left-2 bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium z-10">
                   🎯 Video Hasil Deteksi YOLO
                 </div>
                 <video
                   src={videoPreview}
                   controls
                   autoPlay
-                  className="w-full h-96 bg-gray-900 rounded-lg"
+                  className="w-full h-64 sm:h-80 md:h-96 bg-gray-900 rounded-lg"
                   crossOrigin="anonymous"
                 />
               </div>

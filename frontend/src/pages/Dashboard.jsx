@@ -151,20 +151,20 @@ export default function Dashboard({ onLogout }) {
   const hasChartData = chartData.some(d => d.dj !== null)
 
   return (
-    <div className="bg-[#f7f7f7] flex flex-col gap-6 items-start justify-start p-6 relative w-full">
+    <div className="bg-[#f7f7f7] flex flex-col gap-4 sm:gap-6 items-start justify-start p-3 sm:p-4 md:p-6 relative w-full">
       {/* Date Picker Section */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 w-full">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-gray-700">Pilih Tanggal:</h2>
+      <div className="bg-white border border-[#e2e8f0] rounded-lg p-3 sm:p-4 w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-700">Pilih Tanggal:</h2>
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-3 py-2 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-blue-700 font-medium"
+            className="px-3 py-2 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 text-blue-700 font-medium w-full sm:w-auto"
             style={{ colorScheme: 'light' }}
           />
-          <div className="text-sm text-gray-500">
-            Data ditampilkan untuk tanggal: {new Date(selectedDate).toLocaleDateString('id-ID', { 
+          <div className="text-xs sm:text-sm text-gray-500">
+            Data: {new Date(selectedDate).toLocaleDateString('id-ID', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
@@ -175,59 +175,58 @@ export default function Dashboard({ onLogout }) {
       </div>
 
       {/* Stats Cards Section */}
-      <div className="grid grid-cols-3 gap-6 relative w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 relative w-full">
         {/* Card 1: Total Traffic Counter */}
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-8 flex flex-col items-start justify-start relative h-[160px]">
+        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 md:p-8 flex flex-col items-start justify-start relative min-h-[120px] sm:h-[160px]">
           <div className="flex items-center justify-between relative w-full">
             <div className="flex flex-col gap-1 items-start">
-              <p className="text-sm font-medium text-gray-500" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '1.4' }}>
+              <p className="text-xs sm:text-sm font-medium text-gray-500" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                 Total Traffic Counter
               </p>
-              <p className="text-4xl font-bold text-black" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '32px', lineHeight: '1.2' }}>
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-black" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                 {dashboardData.totalTrafficCounter.toLocaleString()}
               </p>
             </div>
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img alt="Traffic Icon" src={imgImage} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+              <img alt="Traffic Icon" src={imgImage} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>
 
         {/* Card 2: LOS Tertinggi */}
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-8 flex flex-col items-start justify-start relative h-[160px]">
+        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 md:p-8 flex flex-col items-start justify-start relative min-h-[120px] sm:h-[160px]">
           <div className="flex items-center justify-between relative w-full">
             <div className="flex flex-col gap-1 items-start">
-              <p className="text-sm font-medium text-gray-500" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, fontSize: '14px', lineHeight: '1.4' }}>
+              <p className="text-xs sm:text-sm font-medium text-gray-500" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                 LOS Tertinggi ({new Date(selectedDate).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit' })})
               </p>
-              <p className="text-4xl font-bold" style={{ 
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold" style={{ 
                 fontFamily: 'Poppins, sans-serif', 
                 fontWeight: 700, 
-                fontSize: '32px', 
                 lineHeight: '1.2',
                 color: losColors[dashboardData.highestLOS] || '#000'
               }}>
                 {dashboardData.highestLOS}
               </p>
-              <p className="text-sm font-regular text-gray-600" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '12px', lineHeight: 'normal' }}>
+              <p className="text-xs sm:text-sm font-regular text-gray-600" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: 'normal' }}>
                 {dashboardData.highestLOSTime || dashboardData.highestLOSLocation || '-'}
               </p>
             </div>
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img alt="LOS Icon" src={imgImage1} style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+              <img alt="LOS Icon" src={imgImage1} className="w-full h-full object-contain" />
             </div>
           </div>
         </div>
 
         {/* Card 3: Data LOS Donut Chart */}
-        <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 flex flex-col gap-2 items-center justify-center relative h-[160px]">
-          <p className="text-lg font-semibold text-gray-600" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, fontSize: '16px', lineHeight: '1.2' }}>
+        <div className="bg-white border border-[#e2e8f0] rounded-lg p-3 sm:p-4 flex flex-col gap-2 items-center justify-center relative min-h-[120px] sm:h-[160px] sm:col-span-2 lg:col-span-1">
+          <p className="text-sm sm:text-lg font-semibold text-gray-600" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
             Data LOS
           </p>
 
           {/* Donut Chart SVG */}
-          <div className="flex items-center gap-4">
-            <div className="relative w-20 h-20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20">
               <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                 {calculateDonutSegments().length > 0 ? (
                   calculateDonutSegments().map((segment, index) => {
@@ -286,49 +285,49 @@ export default function Dashboard({ onLogout }) {
       </div>
 
       {/* Main Chart - Grafik Kinerja Ruas Jalan */}
-      <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 relative w-full">
-        <div className="flex items-start justify-between gap-8 relative w-full mb-4">
+      <div className="bg-white border border-[#e2e8f0] rounded-lg p-3 sm:p-4 md:p-6 relative w-full">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-4 lg:gap-8 relative w-full mb-4">
           <div>
-            <h3 className="text-xl font-bold text-black" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, fontSize: '20px', lineHeight: '1.2' }}>
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-black" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
               Grafik Kinerja Ruas Jalan MBZ (Harian)
             </h3>
-            <p className="text-sm font-regular text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, fontSize: '14px', lineHeight: '1.4' }}>
+            <p className="text-xs sm:text-sm font-regular text-gray-500 mt-1" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4' }}>
               Derajat Kejenuhan berdasarkan deteksi YOLO dan standar PKJI 2023
             </p>
           </div>
           
-          {/* Legend */}
-          <div className="flex flex-col gap-1 text-xs">
+          {/* Legend - responsive grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-col gap-1 text-xs">
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 bg-blue-500"></div>
-              <span className="text-gray-600">DJ Aktual (YOLO)</span>
+              <span className="text-gray-600 text-xs">DJ Aktual (YOLO)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-green-500"></div>
-              <span className="text-gray-600">Batas LOS A</span>
+              <span className="text-gray-600 text-xs">Batas LOS A</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-lime-500"></div>
-              <span className="text-gray-600">Batas LOS B</span>
+              <span className="text-gray-600 text-xs">Batas LOS B</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-yellow-500"></div>
-              <span className="text-gray-600">Batas LOS C</span>
+              <span className="text-gray-600 text-xs">Batas LOS C</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-orange-500"></div>
-              <span className="text-gray-600">Batas LOS D</span>
+              <span className="text-gray-600 text-xs">Batas LOS D</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-0.5 border-t-2 border-dashed border-red-500"></div>
-              <span className="text-gray-600">Batas LOS E</span>
+              <span className="text-gray-600 text-xs">Batas LOS E</span>
             </div>
           </div>
         </div>
 
-        {/* Chart Area */}
-        <div className="relative w-full h-[350px]">
-          <svg viewBox="0 0 900 350" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+        {/* Chart Area - responsive */}
+        <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px] overflow-x-auto">
+          <svg viewBox="0 0 900 350" className="w-full h-full min-w-[600px]" preserveAspectRatio="xMidYMid meet">
             {/* Y-axis labels */}
             <text x="25" y="35" className="text-xs fill-gray-500" textAnchor="end">1</text>
             <text x="25" y="95" className="text-xs fill-gray-500" textAnchor="end">0.8</text>

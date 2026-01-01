@@ -13,7 +13,11 @@ module.exports = {
         purple: '#8B5CF6',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Inter', 'Poppins', 'sans-serif'],
+      },
+      screens: {
+        'xs': '475px',
+        // default: sm:640px, md:768px, lg:1024px, xl:1280px, 2xl:1536px
       }
     },
   },

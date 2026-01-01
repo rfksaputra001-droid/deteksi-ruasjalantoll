@@ -345,25 +345,25 @@ export default function Perhitungan({ onLogout }) {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Error/Success Messages */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600 font-medium">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+          <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
         </div>
       )}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-600 font-medium">{success}</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <p className="text-green-600 font-medium text-sm sm:text-base">{success}</p>
         </div>
       )}
 
       {/* Mode Selector */}
-      <Card className="!p-4">
-        <div className="flex gap-4 justify-center">
+      <Card className="!p-3 sm:!p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
           <button
             onClick={() => { setMode('manual'); setShowResults(false); setResults(null); }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all text-sm sm:text-base ${
               mode === 'manual' 
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -373,7 +373,7 @@ export default function Perhitungan({ onLogout }) {
           </button>
           <button
             onClick={() => { setMode('deteksi'); setShowResults(false); setResults(null); }}
-            className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all text-sm sm:text-base ${
               mode === 'deteksi' 
                 ? 'bg-green-600 text-white' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -386,8 +386,8 @@ export default function Perhitungan({ onLogout }) {
 
       {/* Main Form */}
       <Card className="!p-0">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-900">
+        <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             {mode === 'manual' ? '📝 Perhitungan Manual' : '🎯 Perhitungan dari Deteksi'}
           </h3>
           {mode === 'manual' && (
@@ -398,7 +398,7 @@ export default function Perhitungan({ onLogout }) {
                 onChange={handleCSVUpload}
                 className="hidden"
               />
-              <div className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors">
+              <div className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg font-semibold flex items-center gap-2 hover:bg-blue-700 transition-colors text-sm sm:text-base">
                 <IconUpload />
                 Upload CSV
               </div>
@@ -406,16 +406,16 @@ export default function Perhitungan({ onLogout }) {
           )}
         </div>
 
-        <div className="p-6 grid grid-cols-2 gap-8">
+        <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {/* Left: Form Inputs */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Pilih Deteksi (jika mode deteksi) */}
             {mode === 'deteksi' && (
               <div>
-                <h4 className="font-semibold text-gray-900 mb-4">Pilih Hasil Deteksi</h4>
-                <div className="bg-gray-50 p-4 rounded-lg max-h-60 overflow-y-auto space-y-2">
+                <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Pilih Hasil Deteksi</h4>
+                <div className="bg-gray-50 p-3 sm:p-4 rounded-lg max-h-60 overflow-y-auto space-y-2">
                   {deteksiList.length === 0 ? (
-                    <p className="text-gray-500 text-center py-4">Belum ada hasil deteksi</p>
+                    <p className="text-gray-500 text-center py-4 text-sm">Belum ada hasil deteksi</p>
                   ) : (
                     deteksiList.map(d => (
                       <div
@@ -427,8 +427,8 @@ export default function Perhitungan({ onLogout }) {
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <p className="font-medium text-gray-900">{d.videoFileName}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{d.videoFileName}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
                           Total: {d.totalKendaraan} kendaraan | 
                           Mobil: {(d.laneKiri?.mobil || 0) + (d.laneKanan?.mobil || 0)} |
                           Bus: {(d.laneKiri?.bus || 0) + (d.laneKanan?.bus || 0)} |
@@ -444,8 +444,8 @@ export default function Perhitungan({ onLogout }) {
 
             {/* Data Jalan */}
             <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Informasi Ruas Jalan</h4>
-              <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Informasi Ruas Jalan</h4>
+              <div className="space-y-3 sm:space-y-4 bg-gray-50 p-3 sm:p-4 rounded-lg">
                 <div>
                   <label className="block text-sm text-gray-700 font-semibold mb-1">Nama Ruas Jalan *</label>
                   <input

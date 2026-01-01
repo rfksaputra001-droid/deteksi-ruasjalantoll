@@ -3,21 +3,43 @@
 @tailwind utilities;
 
 * {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   @apply bg-gray-50;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 #root {
   @apply flex;
+}
+
+/* Custom scrollbar for all scrollable elements */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }
 
 .sidebar {
@@ -44,7 +66,8 @@ html, body, #root {
   @apply flex-1 overflow-y-auto;
 }
 
-@media (max-width: 768px) {
+/* Mobile responsive */
+@media (max-width: 1023px) {
   .sidebar {
     @apply -left-60 transition-all duration-300;
   }
@@ -55,5 +78,25 @@ html, body, #root {
 
   .main-content {
     @apply ml-0;
+  }
+}
+
+/* Better touch targets for mobile */
+@media (max-width: 640px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* Prevent zoom on input focus (iOS) */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px;
   }
 }

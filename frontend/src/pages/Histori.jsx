@@ -144,50 +144,50 @@ export default function Histori({ onLogout }) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600 font-medium">{error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+          <p className="text-red-600 font-medium text-sm sm:text-base">{error}</p>
         </div>
       )}
 
       {/* Success Message */}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <p className="text-green-600 font-medium">{successMessage}</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <p className="text-green-600 font-medium text-sm sm:text-base">{successMessage}</p>
         </div>
       )}
 
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-center gap-3">
         <span>ℹ️</span>
-        <p className="text-sm text-blue-900">Histori tersimpan otomatis setiap kali Anda melakukan perhitungan kinerja ruas jalan.</p>
+        <p className="text-xs sm:text-sm text-blue-900">Histori tersimpan otomatis setiap kali Anda melakukan perhitungan kinerja ruas jalan.</p>
       </div>
 
       {/* History Table */}
       <Card className="!p-0">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-4 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">📋 Riwayat Perhitungan</h3>
-            <p className="text-sm text-gray-500 mt-1">Total: {totalItems} data</p>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900">📋 Riwayat Perhitungan</h3>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Total: {totalItems} data</p>
           </div>
           <button
             onClick={fetchHistory}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
           >
             🔄 Refresh
           </button>
         </div>
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {historyData.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="text-6xl mb-4">📊</div>
-              <p className="text-lg font-medium">Belum ada riwayat perhitungan</p>
-              <p className="text-sm mt-2">Lakukan perhitungan kinerja ruas jalan di halaman <span className="text-blue-600 font-medium">Perhitungan</span> untuk melihat histori di sini</p>
+            <div className="text-center py-8 sm:py-12 text-gray-500">
+              <div className="text-4xl sm:text-6xl mb-4">📊</div>
+              <p className="text-base sm:text-lg font-medium">Belum ada riwayat perhitungan</p>
+              <p className="text-xs sm:text-sm mt-2">Lakukan perhitungan kinerja ruas jalan di halaman <span className="text-blue-600 font-medium">Perhitungan</span> untuk melihat histori di sini</p>
               <button
                 onClick={() => navigate('/perhitungan')}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="mt-4 px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
               >
                 Mulai Perhitungan
               </button>
@@ -197,7 +197,7 @@ export default function Histori({ onLogout }) {
               <Table columns={columns} data={historyData} />
 
               {/* Pagination */}
-              <div className="mt-6 flex justify-between items-center">
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
                 <p className="text-sm text-gray-600">
                   Menampilkan {historyData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, totalItems)} dari {totalItems}
                 </p>

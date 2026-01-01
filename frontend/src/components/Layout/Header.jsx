@@ -1,7 +1,15 @@
+import PropTypes from 'prop-types'
 import { useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
 const imgLogoVector = 'https://www.figma.com/api/mcp/asset/115fae26-0be9-4560-91cd-4fd509374e39'
+
+// Hamburger Menu Icon
+const IconMenu = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -12,7 +20,7 @@ const pageNames = {
   '/petunjuk': 'Petunjuk Penggunaan',
 }
 
-export default function Header() {
+export default function Header({ onMenuClick }) {
   const location = useLocation()
   const [userName, setUserName] = useState('User')
 
@@ -31,20 +39,37 @@ export default function Header() {
   const pageName = pageNames[location.pathname] || 'Dashboard'
 
   return (
-    <header className="bg-white border-b border-[#e2e8f0] h-16 flex items-center justify-between px-6 sticky top-0 z-30">
-      <h1 className="text-black font-semibold" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2', fontSize: '20px' }}>
-        {pageName}
-      </h1>
+    <header className="bg-white border-b border-[#e2e8f0] h-14 md:h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+      {/* Left side - Menu button (mobile) + Page title */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden">
+        {/* Hamburger menu - only on mobile */}
+        <button 
+          onClick={onMenuClick}
+          className="sm:hidden p-1.5 hover:bg-gray-100 rounded-lg"
+          aria-label="Open menu"
+        >
+          <IconMenu />
+        </button>
+        <h1 className="text-black font-semibold text-base md:text-lg lg:text-xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
+          {pageName}
+        </h1>
+      </div>
+      
+      {/* Right side - User info */}
+      <div className="flex items-center gap-2 md:gap-3">
+        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex-shrink-0 overflow-hidden">
           <img alt="User Avatar" className="w-full h-full object-cover" src={imgLogoVector} />
         </div>
         <div className="flex flex-col">
-          <span className="text-black font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.2', fontSize: '14px' }}>
+          <span className="text-black font-medium text-sm truncate max-w-[100px] md:max-w-none" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.2' }}>
             {userName}
           </span>
         </div>
       </div>
     </header>
   )
+}
+
+Header.propTypes = {
+  onMenuClick: PropTypes.func
 }

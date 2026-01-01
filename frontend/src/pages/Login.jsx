@@ -85,83 +85,84 @@ export default function Login({ onLogin }) {
   }
 
   return (
-    <div className="bg-[#f7f7f7] relative w-full h-screen overflow-hidden">
-      <div className="flex h-screen w-full">
+    <div className="bg-[#f7f7f7] relative w-full min-h-screen overflow-auto">
+      {/* Mobile: Stacked layout, Tablet+: Side by side */}
+      <div className="flex flex-col sm:flex-row min-h-screen w-full">
         {/* Left Section - Blue Gradient */}
-        <div className="bg-gradient-to-r from-[#2563eb] to-[#1e3a8a] flex flex-1 flex-col justify-between items-center text-white" style={{ padding: '56px' }}>
+        <div className="bg-gradient-to-r from-[#2563eb] to-[#1e3a8a] flex w-full sm:w-[45%] md:w-1/2 flex-col justify-between items-center text-white p-6 sm:p-6 md:p-8 lg:p-14 min-h-[35vh] sm:min-h-screen">
           {/* Main Content */}
           <div className="flex flex-col w-full items-start">
             {/* Brand */}
-            <div className="flex gap-4 items-center w-full" style={{ paddingBottom: '8px' }}>
-              <img alt="Logo PKTJ" className="shrink-0" style={{ width: '61px', height: '61px', objectFit: 'cover' }} src={imgLogo} />
-              <h1 className="text-white font-bold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '32px', fontWeight: 700, lineHeight: '1.2' }}>
+            <div className="flex gap-2 md:gap-4 items-center w-full pb-2">
+              <img alt="Logo PKTJ" className="shrink-0 w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-[61px] lg:h-[61px] object-cover" src={imgLogo} />
+              <h1 className="text-white font-bold text-lg sm:text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                 KINERJA RUAS JALAN
               </h1>
             </div>
 
             {/* Title Section */}
-            <div className="flex flex-col w-full" style={{ gap: '24px', paddingTop: '72px', paddingBottom: '32px' }}>
-              <h2 className="text-white font-bold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '32px', fontWeight: 700, lineHeight: '1.2' }}>
+            <div className="flex flex-col w-full gap-2 md:gap-6 pt-4 sm:pt-8 md:pt-12 lg:pt-[72px] pb-2 md:pb-8">
+              <h2 className="text-white font-bold text-base sm:text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                 Cerdas Hitung Kendaraan<br/>pada Jalan Tol
               </h2>
-              <p className="text-white font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: 500, lineHeight: '1.4' }}>
-                Sistem Perhitungan untuk memantau jumlah<br/>kendaraan secara otomatis dan akurat.
+              <p className="text-white font-medium text-sm sm:text-xs md:text-sm lg:text-base hidden sm:block" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
+                Sistem Perhitungan untuk memantau jumlah kendaraan secara otomatis dan akurat.
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="flex w-full" style={{ gap: '96px', paddingTop: '32px', paddingBottom: '32px' }}>
+            {/* Stats - Hidden on mobile */}
+            <div className="hidden sm:flex flex-row flex-wrap gap-4 md:gap-8 lg:gap-[96px] pt-4 md:pt-8 pb-4 md:pb-8 w-full">
               <div className="flex flex-col">
-                <p className="text-white font-bold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '32px', fontWeight: 700, lineHeight: '1.2' }}>
+                <p className="text-white font-bold text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                   YOLO V8
                 </p>
-                <p className="text-white font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: 500, lineHeight: '1.4' }}>
+                <p className="text-white font-medium text-xs md:text-sm lg:text-base" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                   Teknologi Mutakhir
                 </p>
               </div>
               <div className="flex flex-col">
-                <p className="text-white font-bold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '32px', fontWeight: 700, lineHeight: '1.2' }}>
+                <p className="text-white font-bold text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                   99%
                 </p>
-                <p className="text-white font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: 500, lineHeight: '1.4' }}>
+                <p className="text-white font-medium text-xs md:text-sm lg:text-base" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                   Uptime
                 </p>
               </div>
               <div className="flex flex-col">
-                <p className="text-white font-bold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '32px', fontWeight: 700, lineHeight: '1.2' }}>
+                <p className="text-white font-bold text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                   90%
                 </p>
-                <p className="text-white font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '16px', fontWeight: 500, lineHeight: '1.4' }}>
+                <p className="text-white font-medium text-xs md:text-sm lg:text-base" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                   Accurate
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="flex w-full" style={{ paddingTop: '56px', paddingBottom: '8px' }}>
-            <p className="text-white font-regular" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4', maxWidth: '560px' }}>
+          {/* Footer - Hidden on mobile */}
+          <div className="hidden sm:flex w-full pt-6 md:pt-8 lg:pt-14 pb-2">
+            <p className="text-white text-[10px] md:text-xs lg:text-sm" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4', maxWidth: '560px' }}>
               © 2025 Politeknik Keselamatan Transportasi Jalan. All rights reserved.
             </p>
           </div>
         </div>
 
         {/* Right Section - Login Form */}
-        <div className="bg-[#f7f7f7] flex flex-1 flex-col items-center justify-center" style={{ padding: '56px' }}>
+        <div className="bg-[#f7f7f7] flex w-full sm:w-[55%] md:w-1/2 flex-col items-center justify-center p-6 sm:p-6 md:p-8 lg:p-14 min-h-[65vh] sm:min-h-screen">
           {/* Login Card */}
-          <div className="bg-white rounded-[24px] flex flex-col items-center" style={{ padding: '40px 32px', boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)', width: '100%', maxWidth: '456px' }}>
+          <div className="bg-white rounded-[16px] md:rounded-[24px] flex flex-col items-center w-full max-w-[456px] p-6 md:p-8 lg:p-10" style={{ boxShadow: '0px 4px 4px 0px rgba(0,0,0,0.25)' }}>
             {/* Header */}
-            <div className="flex flex-col gap-2 items-center text-center w-full" style={{ paddingBottom: '8px' }}>
-              <h2 className="text-black font-semibold" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '20px', fontWeight: 600, lineHeight: '1.2' }}>
+            <div className="flex flex-col gap-2 items-center text-center w-full pb-2">
+              <h2 className="text-black font-semibold text-lg md:text-xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
                 Selamat Datang!
               </h2>
-              <p className="text-black font-regular" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4' }}>
+              <p className="text-black text-sm md:text-base" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4' }}>
                 Masuk ke akun Anda untuk melanjutkan
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="flex flex-col w-full" style={{ gap: '8px', paddingTop: '8px' }}>
+            <form onSubmit={handleSubmit} className="flex flex-col w-full gap-2 pt-2">
               {/* Error Message */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-[8px] p-3 mb-2">
@@ -170,31 +171,28 @@ export default function Login({ onLogin }) {
               )}
 
               {/* Email Field */}
-              <div className="flex flex-col w-full" style={{ gap: '8px', paddingBottom: '8px' }}>
-                <label className="text-black font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 500, lineHeight: '1.4' }}>
+              <div className="flex flex-col w-full gap-2 pb-2">
+                <label className="text-black font-medium text-sm" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                   Email
                 </label>
                 <div 
-                  className="bg-white border-2 rounded-[8px] flex items-center relative w-full" 
+                  className="bg-white border-2 rounded-[8px] flex items-center relative w-full gap-3 md:gap-4 p-3 md:p-4" 
                   style={{ 
-                    gap: '16px', 
-                    padding: '16px',
                     boxShadow: '0px 2px 2px 0px rgba(0,0,0,0.15)',
                     borderColor: emailFocused ? '#2563eb' : '#f7f7f7',
                     transition: 'border-color 0.3s ease'
                   }}
                 >
-                  <img alt="Email Icon" className="shrink-0" style={{ width: '15px', height: '15px', objectFit: 'contain' }} src={imgVector1} />
+                  <img alt="Email Icon" className="shrink-0 w-4 h-4" src={imgVector1} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="nama@email.com"
-                    className="flex-1 bg-transparent text-black outline-none font-regular"
+                    className="flex-1 bg-transparent text-black outline-none text-sm md:text-base"
                     style={{ 
                       fontFamily: 'Poppins, sans-serif', 
                       fontWeight: 400, 
-                      fontSize: '14px', 
                       lineHeight: '1.4', 
                       color: email ? '#000' : '#8a8a8a' 
                     }}
@@ -206,31 +204,28 @@ export default function Login({ onLogin }) {
               </div>
 
               {/* Password Field */}
-              <div className="flex flex-col w-full" style={{ gap: '8px', paddingBottom: '8px' }}>
-                <label className="text-black font-medium" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 500, lineHeight: '1.4' }}>
+              <div className="flex flex-col w-full gap-2 pb-2">
+                <label className="text-black font-medium text-sm" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.4' }}>
                   Password
                 </label>
                 <div 
-                  className="bg-white border-2 rounded-[8px] flex items-center relative w-full"
+                  className="bg-white border-2 rounded-[8px] flex items-center relative w-full gap-3 md:gap-4 p-3 md:p-4"
                   style={{ 
-                    gap: '16px', 
-                    padding: '16px',
                     boxShadow: '0px 2px 2px 0px rgba(0,0,0,0.15)',
                     borderColor: passwordFocused ? '#2563eb' : '#f7f7f7',
                     transition: 'border-color 0.3s ease'
                   }}
                 >
-                  <img alt="Password Icon" className="shrink-0" style={{ width: '12px', height: '15px', objectFit: 'contain' }} src={imgVector2} />
+                  <img alt="Password Icon" className="shrink-0 w-3 h-4" src={imgVector2} />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="flex-1 bg-transparent text-black outline-none font-regular"
+                    className="flex-1 bg-transparent text-black outline-none text-sm md:text-base"
                     style={{ 
                       fontFamily: 'Poppins, sans-serif', 
                       fontWeight: 400, 
-                      fontSize: '14px', 
                       lineHeight: '1.4', 
                       color: password ? '#000' : '#8a8a8a' 
                     }}
@@ -245,14 +240,11 @@ export default function Login({ onLogin }) {
               <button
                 type="submit"
                 disabled={loading || !email || !password}
-                className="text-white text-center rounded-[8px] w-full border-0 cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-white text-center rounded-[8px] w-full border-0 cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed p-3 md:p-4 mt-2 text-sm md:text-base"
                 style={{ 
                   fontFamily: 'Poppins, sans-serif', 
                   fontWeight: 500, 
-                  fontSize: '14px', 
                   lineHeight: '1.4', 
-                  padding: '16px', 
-                  marginTop: '8px',
                   boxShadow: '0px 3px 3px 0px rgba(0,0,0,0.2)',
                   backgroundColor: buttonHover && !loading ? '#1d4ed8' : '#2563eb',
                   transition: 'background-color 0.3s ease'
@@ -265,11 +257,11 @@ export default function Login({ onLogin }) {
             </form>
 
             {/* Footer Section */}
-            <div className="flex flex-wrap gap-1 items-center justify-center w-full" style={{ paddingTop: '8px', marginTop: '8px', height: '32px' }}>
-              <span className="text-black font-regular whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4' }}>
+            <div className="flex flex-wrap gap-2 items-center justify-center w-full pt-4 mt-2 min-h-[32px] text-sm">
+              <span className="text-black whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4' }}>
                 Belum punya akun?
               </span>
-              <span className="text-black font-regular whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4' }}>
+              <span className="text-black whitespace-nowrap hidden sm:inline" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4' }}>
                 Lupa password?
               </span>
               <a 
@@ -279,16 +271,18 @@ export default function Login({ onLogin }) {
                 onMouseEnter={() => setAdminHover(true)}
                 onMouseLeave={() => setAdminHover(false)}
               >
-                <span className="font-regular whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4', color: '#10b981' }}>
+                <span className="font-regular whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4', color: '#10b981' }}>
                   Hubungi Admin
                 </span>
-                <img alt="Arrow Icon" className="shrink-0" style={{ width: '14px', height: '14px', objectFit: 'contain' }} src={imgVector} />
+                <img alt="Arrow Icon" className="shrink-0 w-4 h-4" src={imgVector} />
               </a>
-              <span className="text-black font-regular" style={{ fontFamily: 'Poppins, sans-serif', fontSize: '14px', fontWeight: 400, lineHeight: '1.4' }}>
-                .
-              </span>
             </div>
           </div>
+
+          {/* Mobile footer */}
+          <p className="sm:hidden text-center text-gray-500 text-xs mt-4" style={{ fontFamily: 'Poppins, sans-serif' }}>
+            © 2025 PKTJ. All rights reserved.
+          </p>
         </div>
       </div>
     </div>

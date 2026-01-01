@@ -2,12 +2,12 @@ import PropTypes from 'prop-types'
 
 export default function Table({ columns, data, striped = true }) {
   return (
-    <div className="overflow-x-auto shadow-md rounded-lg">
-      <table className="w-full">
+    <div className="overflow-x-auto shadow-md rounded-lg -mx-3 sm:mx-0">
+      <table className="w-full min-w-[600px]">
         <thead className="bg-gray-100 border-b border-gray-300">
           <tr>
             {columns.map((column) => (
-              <th key={column.key} className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+              <th key={column.key} className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold text-gray-900 whitespace-nowrap">
                 {column.label}
               </th>
             ))}
@@ -22,7 +22,7 @@ export default function Table({ columns, data, striped = true }) {
               }`}
             >
               {columns.map((column) => (
-                <td key={column.key} className="px-6 py-4 text-sm text-gray-700">
+                <td key={column.key} className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-700">
                   {column.render ? column.render(row[column.key], row) : row[column.key]}
                 </td>
               ))}

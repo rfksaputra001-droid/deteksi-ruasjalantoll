@@ -25,15 +25,19 @@ services:
       - key: HOST
         value: "0.0.0.0"
       
-      # OpenCV & Python Settings
+      # OpenCV & Python Settings - Fixed for Docker
       - key: OPENCV_LOG_LEVEL
         value: "ERROR"
       - key: QT_QPA_PLATFORM
         value: "offscreen"
       - key: PYTHONPATH
-        value: "/app"
+        value: "/app:/opt/venv/lib/python3.11/site-packages"
       - key: PYTHON_EXECUTABLE
-        value: "python"
+        value: "/opt/venv/bin/python"
+      - key: PATH
+        value: "/opt/venv/bin:/usr/local/bin:/usr/bin:/bin"
+      - key: VIRTUAL_ENV
+        value: "/opt/venv"
       
       # YOLO/Torch Settings
       - key: TORCH_HOME

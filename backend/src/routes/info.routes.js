@@ -1,5 +1,119 @@
 const express = require('express');
+const { spawn } = require('child_process');
+const fs = require('fs');
 const router = express.Router();
+
+// Docker Environment Debug Endpoint
+router.get('/debug', async (req, res) => {
+  try {
+    const pythonExecutable = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
+    
+    // Check Python executable
+    const pythonExists = fs.existsSync(pythonExecutable);
+    
+    // Get system info
+    const systemInfo = {
+      nodeVersion: process.version,
+      platform: process.platform,
+      arch: process.arch,
+      pythonExecutable: pythonExecutable,
+      pythonExists: pythonExists,
+      environment: {
+        NODE_ENV: process.env.NODE_ENV,
+        PYTHON_ENV: process.env.PYTHON_ENV,
+        PYTHONPATH: process.env.PYTHONPATH,
+        VIRTUAL_ENV: process.env.VIRTUAL_ENV,
+        PATH: process.env.PATH,
+        OPENCV_LOG_LEVEL: process.env.OPENCV_LOG_LEVEL,
+        QT_QPA_PLATFORM: process.env.QT_QPA_PLATFORM
+      },
+      directories: {
+        cwd: process.cwd(),
+        tmpExists: fs.existsSync('/tmp'),
+        appExists: fs.existsSync('/app'),
+        venvExists: fs.existsSync('/opt/venv'),
+        matplotlibExists: fs.existsSync('/tmp/matplotlib')
+      }
+    };
+    
+    // Test Python imports
+    const pythonTest = `
+try:
+    import sys
+    print(f"Python: {sys.version}")
+    
+    import cv2
+    print(f"OpenCV: {cv2.__version__}")
+    
+    import numpy as np
+    print(f"NumPy: {np.__version__}")
+    
+    import torch
+    print(f"PyTorch: {torch.__version__}")
+    
+    from ultralytics import YOLO
+    print("YOLO: OK")
+    
+    print("ALL_IMPORTS_SUCCESS")
+except Exception as e:
+    print(f"ERROR: {e}")
+`;
+    
+    const python = spawn(pythonExecutable, ['-c', pythonTest], {
+      timeout: 30000,
+      cwd: '/app',
+      env: {
+        ...process.env,
+        PYTHONPATH: process.env.PYTHONPATH || '/app:/opt/venv/lib/python3.11/site-packages',
+        OPENCV_LOG_LEVEL: 'ERROR',
+        MPLCONFIGDIR: '/tmp/matplotlib',
+        QT_QPA_PLATFORM: 'offscreen'
+      }
+    });
+    
+    let pythonOutput = '';
+    let pythonError = '';
+    
+    python.stdout.on('data', (data) => {
+      pythonOutput += data.toString();
+    });
+    
+    python.stderr.on('data', (data) => {
+      pythonError += data.toString();
+    });
+    
+    python.on('close', (code) => {
+      res.json({
+        success: true,
+        system: systemInfo,
+        python: {
+          exitCode: code,
+          stdout: pythonOutput,
+          stderr: pythonError
+        },
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+    python.on('error', (error) => {
+      res.json({
+        success: false,
+        system: systemInfo,
+        python: {
+          error: error.message
+        },
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 // Welcome page dengan dokumentasi lengkap
 router.get('/', (req, res) => {

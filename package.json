@@ -5,14 +5,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "backend": "cd 'yolo-backend  final' && npm run dev",
-    "frontend": "cd kinerja-ruas-jalan && npm run dev",
-    "build:frontend": "cd kinerja-ruas-jalan && npm run build",
-    "start:backend": "cd 'yolo-backend  final' && npm start",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && npm start",
     "install:all": "npm run install:backend && npm run install:frontend",
-    "install:backend": "cd 'yolo-backend  final' && npm install",
-    "install:frontend": "cd kinerja-ruas-jalan && npm install",
-    "create-admin": "cd 'yolo-backend  final' && npm run create-admin"
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "create-admin": "cd backend && npm run create-admin"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"

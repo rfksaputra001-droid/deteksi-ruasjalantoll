@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const path = require('path');
 const logger = require('./utils/logger');
 const errorHandler = require('./middlewares/errorHandler');
 
@@ -19,7 +20,18 @@ const perhitunganRoutes = require('./routes/perhitungan.routes');
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:", "blob:"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            connectSrc: ["'self'", "https:", "wss:"]
+        },
+    },
+}));
 
 // CORS
 app.use(cors({
@@ -66,9 +78,6 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Info Routes (Beautiful Welcome Page)
-app.use('/', infoRoutes);
-
 // API info
 app.get('/api', (req, res) => {
     res.status(200).json({
@@ -96,12 +105,22 @@ app.use('/api/histori', historiRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/perhitungan', perhitunganRoutes);
 
-// 404 handler
-app.use((req, res) => {
-    res.status(404).json({
-        status: 'error',
-        message: 'Route tidak ditemukan'
-    });
+// Serve static files from React build
+const frontendBuildPath = path.join(__dirname, '../../frontend/dist');
+app.use(express.static(frontendBuildPath));
+
+// Catch all handler: send back React's index.html file for client-side routing
+app.get('*', (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/health')) {
+        return res.status(404).json({
+            status: 'error',
+            message: 'Route tidak ditemukan'
+        });
+    }
+    
+    // Serve React app
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
 // Global error handler

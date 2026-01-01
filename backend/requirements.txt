@@ -17,8 +17,13 @@ pydantic-settings==2.1.0
 
 # Image Processing & Computer Vision
 Pillow==10.1.0
-opencv-python-headless==4.8.1.78
-numpy==1.24.3
+# Use specific OpenCV version known to work on cloud platforms
+opencv-python-headless==4.8.0.76
+# NumPy version compatible with OpenCV
+numpy==1.24.4
+# Additional dependencies for better OpenCV support
+scipy==1.11.4
+imageio==2.33.0
 
 # YOLO Detection
 ultralytics==8.0.196

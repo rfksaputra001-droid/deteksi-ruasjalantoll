@@ -894,37 +894,26 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 `;
 
   return new Promise((resolve, reject) => {
-    // Try multiple Python paths - use first one that exists
+    // Try absolute paths only to avoid shell dependency
     const possiblePythonPaths = [
-      '/opt/venv/bin/python',    // Docker venv
+      '/opt/venv/bin/python',    // Docker venv (primary choice)
       '/usr/bin/python3',        // System Python3
       '/usr/bin/python',         // System Python
-      'python3',                 // PATH fallback
-      'python'                   // PATH fallback
+      '/usr/local/bin/python3',  // Alternative location
+      '/usr/local/bin/python'    // Alternative location
     ];
     
     // Find the first available Python executable
-    let pythonExecutable = 'python';
+    let pythonExecutable = '/opt/venv/bin/python'; // Default fallback
     for (const pyPath of possiblePythonPaths) {
       try {
-        if (pyPath.startsWith('/')) {
-          // Check if file exists for absolute paths
-          if (require('fs').existsSync(pyPath)) {
-            pythonExecutable = pyPath;
-            break;
-          }
-        } else {
-          // For relative paths, try to use which command
-          try {
-            execSync(`which ${pyPath}`, { stdio: 'pipe' });
-            pythonExecutable = pyPath;
-            break;
-          } catch (e) {
-            // Continue to next option
-          }
+        if (require('fs').existsSync(pyPath)) {
+          pythonExecutable = pyPath;
+          logger.info(`✅ Found Python at: ${pyPath}`);
+          break;
         }
       } catch (e) {
-        // Continue to next option
+        logger.warn(`❌ Cannot check Python path: ${pyPath}`);
       }
     }
     
@@ -952,8 +941,7 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
     const python = spawn(pythonExecutable, ['-c', pythonCode], {
       timeout: 3600000, // 1 jam timeout
       cwd: '/app',
-      env: pythonEnv,
-      shell: true  // Use shell to properly resolve PATH
+      env: pythonEnv
     });
 
     let lastProgress = 0;

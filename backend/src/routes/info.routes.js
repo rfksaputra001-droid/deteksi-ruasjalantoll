@@ -9,29 +9,20 @@ function findPythonExecutable() {
     '/opt/venv/bin/python',
     '/usr/bin/python3',
     '/usr/bin/python',
-    'python3',
-    'python'
+    '/usr/local/bin/python3',
+    '/usr/local/bin/python'
   ];
   
   for (const pyPath of possiblePaths) {
     try {
-      if (pyPath.startsWith('/')) {
-        if (fs.existsSync(pyPath)) {
-          return pyPath;
-        }
-      } else {
-        try {
-          execSync(`which ${pyPath}`, { stdio: 'pipe' });
-          return pyPath;
-        } catch (e) {
-          // Continue
-        }
+      if (fs.existsSync(pyPath)) {
+        return pyPath;
       }
     } catch (e) {
       // Continue
     }
   }
-  return 'python';
+  return '/opt/venv/bin/python'; // Default fallback
 }
 
 // Docker Environment Debug Endpoint
@@ -100,8 +91,7 @@ except Exception as e:
         MPLCONFIGDIR: '/tmp/matplotlib',
         QT_QPA_PLATFORM: 'offscreen',
         PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin:' + (process.env.PATH || '')
-      },
-      shell: true
+      }
     });
     
     let pythonOutput = '';

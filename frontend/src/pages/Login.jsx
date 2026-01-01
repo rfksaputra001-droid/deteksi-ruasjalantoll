@@ -3,10 +3,35 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { API_ENDPOINTS, apiRequest } from '../config/api'
 
-const imgLogo = 'https://www.figma.com/api/mcp/asset/0f88ea34-cc15-47e1-99f5-b46aea6bbb79'
-const imgVector1 = 'https://www.figma.com/api/mcp/asset/298a5217-8b15-4219-bdcf-f25711918759'
-const imgVector2 = 'https://www.figma.com/api/mcp/asset/fee0b0b1-d837-4eeb-97c7-ceaff3092e5d'
-const imgVector = 'https://www.figma.com/api/mcp/asset/7ef5357b-5e12-4fa8-87fb-683bbe7903d3'
+// SVG Icons to replace Figma assets and avoid cookie issues
+const LogoIcon = () => (
+  <svg width="61" height="61" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" fill="#3B82F6" stroke="white" strokeWidth="2"/>
+    <path d="M12 8V16M8 12H16" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
+
+const EmailIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
+const PasswordIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="12" cy="16" r="1" fill="currentColor"/>
+    <path d="M7 11V7A5 5 0 0 1 17 7V11" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+)
+
+const EyeIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+  </svg>
+)
 
 export default function Login({ onLogin }) {
   const navigate = useNavigate()
@@ -100,7 +125,9 @@ export default function Login({ onLogin }) {
           <div className="flex flex-col w-full items-start">
             {/* Brand */}
             <div className="flex gap-2 md:gap-4 items-center w-full pb-2">
-              <img alt="Logo PKTJ" className="shrink-0 w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-[61px] lg:h-[61px] object-cover" src={imgLogo} />
+              <div className="shrink-0 w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-[61px] lg:h-[61px]">
+                <LogoIcon />
+              </div>
               <h1 className="text-white font-bold text-lg sm:text-base md:text-xl lg:text-[32px]" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 700, lineHeight: '1.2' }}>
                 KINERJA RUAS JALAN
               </h1>
@@ -189,7 +216,7 @@ export default function Login({ onLogin }) {
                     transition: 'border-color 0.3s ease'
                   }}
                 >
-                  <img alt="Email Icon" className="shrink-0 w-4 h-4" src={imgVector1} />
+                  <EmailIcon />
                   <input
                     type="email"
                     value={email}
@@ -222,7 +249,7 @@ export default function Login({ onLogin }) {
                     transition: 'border-color 0.3s ease'
                   }}
                 >
-                  <img alt="Password Icon" className="shrink-0 w-3 h-4" src={imgVector2} />
+                  <PasswordIcon />
                   <input
                     type="password"
                     value={password}
@@ -280,7 +307,9 @@ export default function Login({ onLogin }) {
                 <span className="font-regular whitespace-nowrap" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 400, lineHeight: '1.4', color: '#10b981' }}>
                   Hubungi Admin
                 </span>
-                <img alt="Arrow Icon" className="shrink-0 w-4 h-4" src={imgVector} />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12H19M12 5L19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </a>
             </div>
           </div>

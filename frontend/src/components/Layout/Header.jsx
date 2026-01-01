@@ -2,7 +2,14 @@ import PropTypes from 'prop-types'
 import { useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
-const imgLogoVector = 'https://www.figma.com/api/mcp/asset/115fae26-0be9-4560-91cd-4fd509374e39'
+// User Avatar Icon - replace Figma asset to avoid cookie issues
+const UserAvatarIcon = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" fill="#3B82F6" stroke="#1E40AF" strokeWidth="2"/>
+    <circle cx="12" cy="9" r="3" fill="white"/>
+    <path d="M7 19.5a5 5 0 0110 0" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+)
 
 // Hamburger Menu Icon
 const IconMenu = () => (
@@ -76,7 +83,7 @@ export default function Header({ onMenuClick, onSidebarToggle }) {
       {/* Right side - User info */}
       <div className="flex items-center gap-2 md:gap-3">
         <div className="w-7 h-7 md:w-8 md:h-8 rounded-full flex-shrink-0 overflow-hidden">
-          <img alt="User Avatar" className="w-full h-full object-cover" src={imgLogoVector} />
+          <UserAvatarIcon />
         </div>
         <div className="flex flex-col">
           <span className="text-black font-medium text-sm truncate max-w-[100px] md:max-w-none" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 500, lineHeight: '1.2' }}>

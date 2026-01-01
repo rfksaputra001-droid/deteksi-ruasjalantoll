@@ -523,7 +523,6 @@ function getDiagnostics() {
     }
   };
 }
-}
 
 module.exports = {
   getPythonExecutable,

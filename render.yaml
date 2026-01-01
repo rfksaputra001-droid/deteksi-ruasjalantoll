@@ -1,49 +1,37 @@
 # =============================================================================
-# Render.yaml - Docker Deployment Configuration
-# Deploy FastAPI + YOLO + OpenCV application using Docker
+# Render.yaml - Python FastAPI Deployment Configuration  
+# Deploy Pure Python YOLO Detection Backend
 # =============================================================================
 
 services:
   - type: web
-    name: yolo-detection-api
-    runtime: docker
+    name: yolo-detection-python-api
+    runtime: python3
     region: singapore
     plan: starter
     
-    # Docker configuration
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    # Python app configuration
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     
     # Environment variables
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PYTHON_ENV
-        value: production
       - key: PORT
         value: "8000"
-      - key: HOST
-        value: "0.0.0.0"
+      - key: PYTHONPATH
+        value: "."
       
-      # OpenCV & Python Settings - Fixed for Docker
+      # YOLO/OpenCV Settings
       - key: OPENCV_LOG_LEVEL
         value: "ERROR"
       - key: QT_QPA_PLATFORM
         value: "offscreen"
-      - key: PYTHONPATH
-        value: "/app:/opt/venv/lib/python3.11/site-packages"
-      - key: PYTHON_EXECUTABLE
-        value: "python"
-      - key: PATH
-        value: "/opt/venv/bin:/usr/local/bin:/usr/bin:/bin"
-      - key: VIRTUAL_ENV
-        value: "/opt/venv"
-      
-      # YOLO/Torch Settings
-      - key: TORCH_HOME
-        value: "/app/.torch"
       - key: YOLO_VERBOSE
         value: "False"
+      - key: TORCH_HOME
+        value: "/tmp/.torch"
       - key: NUMBA_DISABLE_JIT
         value: "1"
       - key: OMP_NUM_THREADS
@@ -59,7 +47,28 @@ services:
       - key: JWT_EXPIRATION_HOURS
         value: "24"
       
-      # Cloudinary
+      
+      # MongoDB - use your existing connection string
+      - key: MONGODB_URI
+        fromDatabase:
+          name: mongodb-cluster
+          property: connectionString
+      - key: DB_NAME
+        value: "yolo_detection"
+      
+      # JWT Secret
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRE_DAYS
+        value: "7"
+        
+      # Cloudinary - use your existing credentials
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY  
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: CLOUDINARY_FOLDER
         value: "yolo-deteksi"
       
@@ -70,12 +79,12 @@ services:
         value: "https://deteksi-ruasjalantoll.vercel.app"
       - key: FRONTEND_URL
         value: "https://deteksi-ruasjalantoll.vercel.app"
+      - key: API_BASE_URL
+        value: "https://yolo-detection-python-api.onrender.com"
       
       # Additional Python settings for stability
       - key: MPLCONFIGDIR
         value: "/tmp/matplotlib"
-      - key: HF_HOME
-        value: "/app/.huggingface"
       - key: TEMPDIR
         value: "/app/temp"
       - key: MAX_VIDEO_SIZE
@@ -91,7 +100,3 @@ services:
       sizeGB: 2
     
     autoDeploy: true
-    
-    buildFilter:
-      paths:
-        - backend/**

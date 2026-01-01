@@ -1,0 +1,57 @@
+# =============================================================================
+# Requirements.txt - FastAPI + YOLO + OpenCV
+# Tested and compatible versions for Docker/Render deployment
+# =============================================================================
+
+# === FastAPI & Server ===
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+python-socketio==5.10.0
+aiofiles==23.2.1
+
+# === Database ===
+pymongo==4.6.0
+motor==3.3.2
+
+# === Authentication ===
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# === Configuration ===
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# === Image Processing & Computer Vision ===
+Pillow==10.1.0
+# OpenCV headless - NO GUI dependencies required
+# This version is tested to work with Python 3.11 on Debian/Ubuntu
+opencv-python-headless==4.9.0.80
+# NumPy - compatible version for OpenCV and PyTorch
+numpy==1.26.3
+# Additional image processing
+scipy==1.11.4
+imageio==2.33.0
+imageio-ffmpeg==0.4.9
+
+# === YOLO Detection ===
+# Ultralytics YOLO - includes all detection dependencies
+ultralytics==8.1.0
+
+# === PyTorch (CPU version for smaller image size) ===
+# Use CPU version to reduce Docker image size significantly
+# For GPU support on Render, use the full torch package
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.2+cpu
+torchvision==0.16.2+cpu
+
+# === Cloud Services ===
+cloudinary==1.36.0
+requests==2.31.0
+httpx==0.26.0
+
+# === Utilities ===
+python-dateutil==2.8.2
+typing-extensions==4.9.0
+psutil==5.9.6

@@ -147,3 +147,5 @@ Jika masih ada masalah, cek:
 - Video upload progress bars working
 - Detection results showing properly
 - No CORS errors in browser console
+
+const API_BASE_URL = 'https://deteksi-ruasjalantoll.onrender.com';

@@ -1,4 +1,4 @@
-#!/home/rifki/project/figma-mcp/backend/venv/bin/python3
+#!/home/rifki/project/figma-mcp/backend-python/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

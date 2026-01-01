@@ -1,189 +1,185 @@
-# 🎯 YOLO Detection Backend API
+# Pure Python YOLO Detection Backend
 
-Backend API untuk sistem deteksi YOLO dengan manajemen admin lengkap.
+Backend API untuk sistem deteksi kendaraan menggunakan YOLO, sepenuhnya berbasis Python dengan FastAPI.
 
 ## 🚀 Features
 
-- ✅ **Authentication & Authorization** (JWT)
-- ✅ **Admin Panel** (User Management)
-- ✅ **Video Upload & Processing**
-- ✅ **YOLO Detection Integration**
-- ✅ **Cloudinary Storage**
-- ✅ **MongoDB Database**
-- ✅ **Auto Cleanup Expired Videos**
-- ✅ **Activity History Logging**
-- ✅ **Role-Based Access Control**
+- **Pure Python**: Tidak ada dependency Node.js, semuanya Python
+- **FastAPI**: Modern, fast web framework dengan auto-documentation
+- **YOLO Detection**: Deteksi kendaraan dengan counting line yang akurat
+- **Socket.IO**: Real-time progress updates
+- **MongoDB**: Database NoSQL dengan Motor (async driver)
+- **Cloudinary**: Cloud storage untuk video
+- **PKJI 2023**: Perhitungan LOS sesuai standar Indonesia
 
-## 📦 Tech Stack
+## 📁 Project Structure
 
-- **Runtime:** Node.js
-- **Framework:** Express.js
-- **Database:** MongoDB (Atlas)
-- **Storage:** Cloudinary
-- **Authentication:** JWT
-- **Video Processing:** FFmpeg
+```
+backend-python/
+├── main.py                 # Entry point
+├── requirements.txt        # Python dependencies
+├── Dockerfile             # Docker configuration
+├── .env.example           # Environment template
+├── app/
+│   ├── config/            # Configuration
+│   │   ├── database.py    # MongoDB connection
+│   │   ├── cloudinary.py  # Cloudinary setup
+│   │   └── constants.py   # PKJI constants
+│   ├── models/            # Pydantic schemas
+│   │   ├── user.py
+│   │   ├── deteksi.py
+│   │   ├── perhitungan.py
+│   │   └── histori.py
+│   ├── routes/            # API endpoints
+│   │   ├── auth.py
+│   │   ├── admin.py
+│   │   ├── deteksi.py
+│   │   ├── dashboard.py
+│   │   ├── perhitungan.py
+│   │   └── histori.py
+│   ├── middleware/        # Middleware
+│   │   ├── auth.py        # JWT authentication
+│   │   └── upload.py      # File upload handling
+│   ├── services/          # Business logic
+│   │   └── yolo_detector.py  # YOLO processing
+│   ├── core/              # Core components
+│   │   └── socket.py      # Socket.IO manager
+│   └── utils/             # Utilities
+│       ├── jwt.py
+│       ├── password.py
+│       └── logger.py
+└── models/                # YOLO model weights
+    └── vehicle-night-yolo/
+```
 
 ## 🛠️ Installation
 
-### 1. Clone Repository
+### Prerequisites
+
+- Python 3.11+
+- MongoDB
+- FFmpeg
+
+### Local Development
 
 ```bash
-git clone <your-repo-url>
-cd yolo-backend
-```
+# Clone repository
+cd backend-python
 
-### 2. Install Dependencies
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# atau
+.\venv\Scripts\activate   # Windows
 
-```bash
-npm install
-```
+# Install dependencies
+pip install -r requirements.txt
 
-### 3. Setup Environment Variables
-
-Copy `.env.example` to `.env` and fill in your credentials:
-
-```bash
+# Copy environment file
 cp .env.example .env
+# Edit .env with your configuration
+
+# Run server
+python main.py
 ```
 
-Edit `.env`:
-```env
-NODE_ENV=development
-PORT=3000
-MONGODB_URI=your_mongodb_uri
-JWT_SECRET=your_jwt_secret_min_32_chars
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-```
-
-### 4. Create Admin User
+### Docker
 
 ```bash
-npm run create-admin
+# Build image
+docker build -t yolo-backend-python .
+
+# Run container
+docker run -p 3000:3000 --env-file .env yolo-backend-python
 ```
 
-Default admin credentials:
-- Email: `admin@yolo.com`
-- Password: `Admin123!`
+## 📚 API Documentation
 
-⚠️ **Change password after first login!**
+Setelah server berjalan, akses dokumentasi API:
 
-### 5. Run Server
+- **Swagger UI**: http://localhost:3000/docs
+- **ReDoc**: http://localhost:3000/redoc
 
-Development mode:
-```bash
-npm run dev
-```
-
-Production mode:
-```bash
-npm start
-```
-
-## 📡 API Endpoints
+## 🔑 API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
+- `POST /api/auth/register` - Register user
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 - `PUT /api/auth/change-password` - Change password
-- `POST /api/auth/logout` - Logout
 
-### Admin (Admin Only)
-- `GET /api/admin/stats` - Dashboard statistics
-- `GET /api/admin/users` - Get all users
-- `GET /api/admin/users/:id` - Get single user
+### Detection
+- `POST /api/deteksi/upload` - Upload video untuk deteksi
+- `GET /api/deteksi/list` - List detections
+- `GET /api/deteksi/result/:id` - Get detection result
+- `GET /api/deteksi/status/:id` - Get detection status
+- `DELETE /api/deteksi/:id` - Delete detection
+
+### Calculation (PKJI 2023)
+- `POST /api/perhitungan/manual` - Manual calculation
+- `POST /api/perhitungan/from-deteksi/:id` - Calculate from detection
+- `GET /api/perhitungan/` - List calculations
+
+### Dashboard
+- `GET /api/dashboard/` - Get statistics
+
+### Admin
+- `GET /api/admin/stats` - Admin statistics
+- `GET /api/admin/users` - List users
 - `POST /api/admin/users` - Create user
-- `PUT /api/admin/users/:id` - Update user
-- `DELETE /api/admin/users/:id` - Delete user
-- `PATCH /api/admin/users/:id/toggle-status` - Toggle user status
-- `PUT /api/admin/users/:id/reset-password` - Reset password
 
-### Videos (Protected)
-- Coming soon...
+## 🎯 YOLO Detection Features
 
-### Detection (Protected)
-- Coming soon...
+- **100% Accurate Counting**: No miss, no double counting
+- **Lane Detection**: Kiri (up) and Kanan (down) direction
+- **Vehicle Classification**: Mobil, Bus, Truk with size validation
+- **Real-time Progress**: Socket.IO updates during processing
+- **Counting Line Visualization**: Clear visual indicators
 
-## 🔐 Authentication
+## 🔧 Environment Variables
 
-All protected routes require Bearer token:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 3000) |
+| `MONGODB_URI` | MongoDB connection string | Yes |
+| `JWT_SECRET` | JWT signing secret | Yes |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | Yes |
+| `CLOUDINARY_API_KEY` | Cloudinary API key | Yes |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret | Yes |
 
-```
-Authorization: Bearer <your_jwt_token>
-```
+## 📦 Deployment (Render.com)
 
-## 👥 User Roles
+1. Push code ke GitHub
+2. Buat Web Service baru di Render
+3. Connect repository
+4. Set environment variables
+5. Deploy!
 
-- **Admin**: Full access to all features + user management
-- **User**: Access to own videos and detections
+Build command: `pip install -r requirements.txt`
+Start command: `python -m uvicorn main:app --host 0.0.0.0 --port $PORT`
 
-## 📝 Example Requests
+## 📝 Migration from Node.js
 
-### Register
-```bash
-POST /api/auth/register
-Content-Type: application/json
+Backend ini adalah konversi lengkap dari Node.js ke Python:
 
-{
-  "namaUser": "John Doe",
-  "emailUser": "john@example.com",
-  "passwordUser": "password123"
-}
-```
-
-### Login
-```bash
-POST /api/auth/login
-Content-Type: application/json
-
-{
-  "emailUser": "admin@yolo.com",
-  "passwordUser": "Admin123!"
-}
-```
-
-### Get All Users (Admin)
-```bash
-GET /api/admin/users?page=1&limit=10
-Authorization: Bearer <admin_token>
-```
-
-## 🧹 Automated Cleanup
-
-The system automatically deletes expired videos daily at 2 AM:
-- Videos older than 7 days (configurable)
-- Removes from Cloudinary
-- Soft deletes from database
-
-## 📊 Database Models
-
-- **User** - User accounts
-- **Video** - Video metadata
-- **DeteksiYOLO** - Detection results
-- **Perhitungan** - Calculations (DJ, LOS)
-- **Histori** - Activity logs
-- **Dataset** - Dataset management
-
-## 🚀 Deployment
-
-### Render.com (Recommended)
-
-1. Connect GitHub repository
-2. Set environment variables
-3. Deploy!
-
-Auto-deploys on git push.
-
-## 📄 License
-
-MIT
-
-## 👨‍💻 Author
-
-Your Name
+| Node.js | Python |
+|---------|--------|
+| Express | FastAPI |
+| Mongoose | Motor + Pydantic |
+| Socket.IO | python-socketio |
+| jsonwebtoken | python-jose |
+| bcryptjs | passlib |
+| multer | python-multipart |
+| spawn Python | Direct Python |
 
 ## 🤝 Contributing
 
-Pull requests are welcome!
+1. Fork repository
+2. Create feature branch
+3. Commit changes
+4. Push to branch
+5. Create Pull Request
+
+## 📄 License
+
+MIT License

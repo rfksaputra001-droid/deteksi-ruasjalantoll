@@ -1,6 +1,7 @@
 # =============================================================================
-# Requirements.txt - FastAPI + YOLO + OpenCV - Render Optimized  
-# Updated for Python 3.13 compatibility and Render deployment
+# Requirements.txt - FastAPI + YOLO + OpenCV
+# Optimized for Render Free Tier with Python 3.11
+# All packages have pre-built wheels for fast installation
 # =============================================================================
 
 # === FastAPI & Server ===
@@ -24,28 +25,22 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # === Image Processing & Computer Vision ===
-# Use pre-compiled wheels for faster builds on Render
-Pillow>=10.2.0
-opencv-python-headless>=4.8.0
-numpy>=1.24.0,<2.0.0
+Pillow==10.1.0
+opencv-python-headless==4.8.1.78
+numpy==1.26.2
 
 # === YOLO Detection ===
-# Ultralytics YOLO with flexible versioning for compatibility
-ultralytics>=8.0.0
+ultralytics==8.0.232
 
-# === PyTorch (CPU version - let pip resolve best versions) ===
-torch>=2.0.0
-torchvision>=0.15.0
+# === PyTorch (CPU only - optimized for free tier) ===
+torch==2.1.0
+torchvision==0.16.0
 
 # === Cloud Services ===
-cloudinary>=1.36.0
-requests>=2.31.0
-httpx>=0.26.0
+cloudinary==1.36.0
+requests==2.31.0
+httpx==0.25.2
 
 # === Utilities ===
-python-dateutil>=2.8.2
-typing-extensions>=4.8.0
-
-# === Build tools for compatibility ===
-setuptools>=65.0.0
-wheel>=0.38.0
+python-dateutil==2.8.2
+typing-extensions==4.8.0

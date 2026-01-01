@@ -1,17 +1,21 @@
 # =============================================================================
 # Render.yaml - Python FastAPI Deployment Configuration  
 # Deploy Pure Python YOLO Detection Backend
+# Using Python 3.11 for compatibility with pre-built wheels
 # =============================================================================
 
 services:
   - type: web
     name: yolo-detection-python-api
-    runtime: python3
+    runtime: python
     region: singapore
-    plan: starter
+    plan: free
     
-    # Build & start commands - simplified for Render compatibility  
-    buildCommand: cd backend && pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
+    # Specify Python 3.11 for compatibility
+    pythonVersion: "3.11.4"
+    
+    # Build & start commands
+    buildCommand: cd backend && pip install --upgrade pip && pip install -r requirements.txt
     startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     
     # Health check
@@ -19,6 +23,8 @@ services:
     
     # Environment variables
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.4"
       - key: PYTHONPATH
         value: /opt/render/project/src/backend
       

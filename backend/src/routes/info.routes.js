@@ -1,15 +1,46 @@
 const express = require('express');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const router = express.Router();
+
+// Helper function to find Python executable
+function findPythonExecutable() {
+  const possiblePaths = [
+    '/opt/venv/bin/python',
+    '/usr/bin/python3',
+    '/usr/bin/python',
+    'python3',
+    'python'
+  ];
+  
+  for (const pyPath of possiblePaths) {
+    try {
+      if (pyPath.startsWith('/')) {
+        if (fs.existsSync(pyPath)) {
+          return pyPath;
+        }
+      } else {
+        try {
+          execSync(`which ${pyPath}`, { stdio: 'pipe' });
+          return pyPath;
+        } catch (e) {
+          // Continue
+        }
+      }
+    } catch (e) {
+      // Continue
+    }
+  }
+  return 'python';
+}
 
 // Docker Environment Debug Endpoint
 router.get('/debug', async (req, res) => {
   try {
-    const pythonExecutable = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
+    const pythonExecutable = findPythonExecutable();
     
     // Check Python executable
-    const pythonExists = fs.existsSync(pythonExecutable);
+    const pythonExists = pythonExecutable.startsWith('/') ? fs.existsSync(pythonExecutable) : true;
     
     // Get system info
     const systemInfo = {
@@ -67,8 +98,10 @@ except Exception as e:
         PYTHONPATH: process.env.PYTHONPATH || '/app:/opt/venv/lib/python3.11/site-packages',
         OPENCV_LOG_LEVEL: 'ERROR',
         MPLCONFIGDIR: '/tmp/matplotlib',
-        QT_QPA_PLATFORM: 'offscreen'
-      }
+        QT_QPA_PLATFORM: 'offscreen',
+        PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin:' + (process.env.PATH || '')
+      },
+      shell: true
     });
     
     let pythonOutput = '';

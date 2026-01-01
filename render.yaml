@@ -18,7 +18,8 @@ services:
     buildCommand: |
       cd backend &&
       python -m pip install --upgrade pip setuptools wheel &&
-      pip install --no-cache-dir -r requirements.txt
+      pip cache purge &&
+      pip install --no-cache-dir --force-reinstall -r requirements.txt
     startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     
     # Health check

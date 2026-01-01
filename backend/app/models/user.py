@@ -4,8 +4,16 @@ User Model - Pydantic schemas for User
 
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field
 from bson import ObjectId
+
+# Try to import EmailStr, fallback to str with email pattern if not available
+try:
+    from pydantic import EmailStr
+    EmailType = EmailStr
+except ImportError:
+    # Fallback to str with email pattern validation
+    EmailType = str
 
 
 class PyObjectId(str):
@@ -23,7 +31,7 @@ class PyObjectId(str):
 
 class UserBase(BaseModel):
     namaUser: str = Field(..., min_length=1, max_length=100)
-    emailUser: EmailStr
+    emailUser: EmailType = Field(..., pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' if EmailType == str else None)
     role: str = Field(default="user", pattern="^(admin|surveyor|user)$")
     isActive: bool = True
     phoneNumber: Optional[str] = None
@@ -36,7 +44,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     namaUser: Optional[str] = Field(None, min_length=1, max_length=100)
-    emailUser: Optional[EmailStr] = None
+    emailUser: Optional[EmailType] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' if EmailType == str else None)
     role: Optional[str] = Field(None, pattern="^(admin|surveyor|user)$")
     isActive: Optional[bool] = None
     phoneNumber: Optional[str] = None

@@ -25,16 +25,16 @@ pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # === Image Processing & Computer Vision ===
-Pillow==10.1.0
+Pillow>=10.4.0,<11.0.0
 opencv-python-headless==4.8.1.78
 numpy==1.26.2
 
 # === YOLO Detection ===
-ultralytics==8.0.232
+ultralytics>=8.1.0,<8.3.0
 
 # === PyTorch (CPU only - optimized for free tier) ===
-torch==2.1.0
-torchvision==0.16.0
+torch>=2.1.0,<2.2.0
+torchvision>=0.16.0,<0.17.0
 
 # === Cloud Services ===
 cloudinary==1.36.0

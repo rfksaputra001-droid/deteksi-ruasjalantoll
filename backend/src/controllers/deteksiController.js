@@ -1,8 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 const mongoose = require('mongoose');
 const logger = require('../utils/logger');
+const { getPythonExecutable, getPythonEnv } = require('../utils/pythonRunner');
 const cloudinary = require('../config/cloudinary');
 const DeteksiYOLO = require('../models/DeteksiYOLO');
 const Perhitungan = require('../models/Perhitungan');
@@ -894,30 +895,19 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 `;
 
   return new Promise((resolve, reject) => {
-    // FIXED: Use exact path from Dockerfile - no detection needed
-    // In Docker: /opt/venv/bin/python (created by Dockerfile)
-    // Locally: Use PYTHON_EXECUTABLE env var or fallback
-    const pythonExecutable = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
-    
-    // Enhanced environment variables for Docker
-    const pythonEnv = {
-      ...process.env,
-      PYTHONPATH: '/app:/opt/venv/lib/python3.11/site-packages',
-      OPENCV_LOG_LEVEL: 'ERROR',
-      MPLCONFIGDIR: '/tmp/matplotlib',
-      QT_QPA_PLATFORM: 'offscreen',
-      VIRTUAL_ENV: '/opt/venv',
-      PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin',
-      TORCH_HOME: '/app/.torch',
-      HF_HOME: '/app/.huggingface',
-      YOLO_VERBOSE: 'False',
-      OMP_NUM_THREADS: '1',
-      NUMBA_DISABLE_JIT: '1'
-    };
+    // Use centralized Python runner utility
+    const pythonExecutable = getPythonExecutable();
+    const pythonEnv = getPythonEnv();
     
     logger.info(`🐍 Using Python: ${pythonExecutable}`);
     logger.info(`📁 Working directory: /app`);
     logger.info(`🔧 PYTHONPATH: ${pythonEnv.PYTHONPATH}`);
+    
+    // Check if Python exists before spawning
+    if (pythonExecutable.startsWith('/') && !fs.existsSync(pythonExecutable)) {
+      logger.error(`❌ Python not found at: ${pythonExecutable}`);
+      return reject(new Error(`Python executable not found: ${pythonExecutable}`));
+    }
     
     const python = spawn(pythonExecutable, ['-c', pythonCode], {
       timeout: 3600000, // 1 jam timeout

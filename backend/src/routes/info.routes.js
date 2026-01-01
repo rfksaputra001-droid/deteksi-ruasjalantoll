@@ -3,16 +3,18 @@ const { spawn } = require('child_process');
 const fs = require('fs');
 const router = express.Router();
 
-// FIXED: Use exact path from Dockerfile
-const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
+// Import centralized Python runner
+const { getPythonExecutable, getPythonEnv, verifyPython } = require('../utils/pythonRunner');
 
 // Docker Environment Debug Endpoint
 router.get('/debug', async (req, res) => {
   try {
-    const pythonExecutable = PYTHON_EXECUTABLE;
+    const pythonExecutable = getPythonExecutable();
     
     // Check Python executable
-    const pythonExists = fs.existsSync(pythonExecutable);
+    const pythonExists = pythonExecutable.startsWith('/') 
+      ? fs.existsSync(pythonExecutable) 
+      : true;
     
     // Get system info
     const systemInfo = {
@@ -23,7 +25,7 @@ router.get('/debug', async (req, res) => {
       pythonExists: pythonExists,
       environment: {
         NODE_ENV: process.env.NODE_ENV,
-        PYTHON_ENV: process.env.PYTHON_ENV,
+        PYTHON_EXECUTABLE: process.env.PYTHON_EXECUTABLE,
         PYTHONPATH: process.env.PYTHONPATH,
         VIRTUAL_ENV: process.env.VIRTUAL_ENV,
         PATH: process.env.PATH,
@@ -64,17 +66,11 @@ except Exception as e:
     print(f"ERROR: {e}")
 `;
     
+    const pythonEnv = getPythonEnv();
     const python = spawn(pythonExecutable, ['-c', pythonTest], {
       timeout: 30000,
       cwd: '/app',
-      env: {
-        ...process.env,
-        PYTHONPATH: process.env.PYTHONPATH || '/app:/opt/venv/lib/python3.11/site-packages',
-        OPENCV_LOG_LEVEL: 'ERROR',
-        MPLCONFIGDIR: '/tmp/matplotlib',
-        QT_QPA_PLATFORM: 'offscreen',
-        PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin:' + (process.env.PATH || '')
-      }
+      env: pythonEnv
     });
     
     let pythonOutput = '';
@@ -112,6 +108,25 @@ except Exception as e:
       });
     });
     
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Python verification endpoint - comprehensive check
+router.get('/python-check', async (req, res) => {
+  try {
+    const verification = await verifyPython();
+    
+    res.json({
+      success: !verification.error,
+      timestamp: new Date().toISOString(),
+      python: verification
+    });
   } catch (error) {
     res.status(500).json({
       success: false,

@@ -18,6 +18,13 @@ const IconClose = () => (
   </svg>
 )
 
+// Collapse Toggle Icon
+const IconChevronLeft = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 // Icon untuk Admin Menu
 const IconUsers = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -38,7 +45,7 @@ const menuItems = [
   { name: 'Petunjuk', path: '/petunjuk', icon: imgPetunjuk, roles: 'all' },
 ]
 
-export default function Sidebar({ onClose }) {
+export default function Sidebar({ onClose, collapsed, onToggleCollapse }) {
   const location = useLocation()
   const navigate = useNavigate()
   const [userRole, setUserRole] = useState('user')
@@ -70,63 +77,89 @@ export default function Sidebar({ onClose }) {
 
   // Handle menu click - close sidebar on mobile
   const handleMenuClick = () => {
-    if (onClose && window.innerWidth < 640) {
+    if (onClose && window.innerWidth < 1024) {
       onClose()
     }
   }
 
   return (
-    <div className="bg-white flex flex-col items-center w-[220px] md:w-[260px] lg:w-[320px] h-screen overflow-y-auto shadow-lg">
+    <div className="bg-white flex flex-col h-screen overflow-y-auto shadow-lg relative">
       {/* Close button - only on mobile */}
       <button 
         onClick={onClose}
-        className="sm:hidden absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-lg z-10"
+        className="lg:hidden absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-lg z-10"
       >
         <IconClose />
       </button>
 
+      {/* Collapse Toggle - only on desktop */}
+      <button
+        onClick={onToggleCollapse}
+        className={`
+          hidden lg:flex absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-lg z-10
+          transition-transform duration-300
+          ${collapsed ? 'rotate-180' : ''}
+        `}
+      >
+        <IconChevronLeft />
+      </button>
+
       {/* Brand */}
-      <div className="flex gap-2 items-center justify-center px-3 md:px-6 lg:px-8 py-3 lg:py-4 w-full shrink-0">
-        <div className="relative w-[28px] h-[28px] md:w-[32px] md:h-[32px] lg:w-[35px] lg:h-[35px]">
+      <div className={`
+        flex items-center justify-center py-4 w-full shrink-0 transition-all duration-300
+        ${collapsed ? 'px-2' : 'px-4'}
+      `}>
+        <div className="relative w-8 h-8 flex-shrink-0">
           <img alt="Logo PKTJ" className="w-full h-full object-cover" src={imgLogoPktjSmall} />
         </div>
-        <h1 className="text-black font-semibold whitespace-nowrap text-sm md:text-base lg:text-lg" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
-          Kinerja Ruas Jalan
-        </h1>
+        {!collapsed && (
+          <h1 className="text-black font-semibold whitespace-nowrap text-sm ml-2 transition-opacity duration-300" 
+              style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
+            Kinerja Ruas Jalan
+          </h1>
+        )}
       </div>
 
       {/* Menu Items - filtered by role */}
-      <nav className="flex flex-col items-center p-3 md:p-4 lg:p-6 w-full gap-0">
+      <nav className={`flex flex-col w-full gap-1 flex-1 transition-all duration-300 ${collapsed ? 'px-2' : 'px-4'}`}>
         {filteredMenuItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             onClick={handleMenuClick}
             className={({ isActive }) => {
-              const baseClass = 'flex gap-2 items-center p-3 lg:p-4 rounded-lg w-full transition-all'
+              const baseClass = `
+                flex items-center rounded-lg transition-all relative group
+                ${collapsed ? 'justify-center p-3' : 'gap-3 p-3'}
+              `
               const activeClass = isActive
-                ? 'bg-[#2563eb]'
-                : 'hover:bg-gray-100'
+                ? 'bg-[#2563eb] text-white'
+                : 'hover:bg-gray-100 text-gray-700'
               return `${baseClass} ${activeClass}`
             }}
-            style={({ isActive }) => ({
-              fontFamily: 'Poppins, sans-serif', 
-              fontWeight: 500, 
-              lineHeight: '1.4', 
-              color: isActive ? '#ffffff' : '#000000',
-            })}
+            title={collapsed ? item.name : undefined}
           >
             {({ isActive: linkActive }) => (
               <>
                 <img 
                   alt={item.name} 
-                  className="w-5 h-5 md:w-6 md:h-6 object-contain" 
+                  className="w-6 h-6 object-contain flex-shrink-0" 
                   src={item.icon}
                   style={{ 
                     filter: linkActive ? 'brightness(0) invert(1)' : 'brightness(0.6)',
                   }}
                 />
-                <span className="text-sm lg:text-base truncate">{item.name}</span>
+                {!collapsed && (
+                  <span className="text-sm font-medium transition-opacity duration-300 truncate">
+                    {item.name}
+                  </span>
+                )}
+                {/* Tooltip for collapsed state */}
+                {collapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                    {item.name}
+                  </div>
+                )}
               </>
             )}
           </NavLink>
@@ -138,28 +171,36 @@ export default function Sidebar({ onClose }) {
             to="/admin/users"
             onClick={handleMenuClick}
             className={({ isActive }) => {
-              const baseClass = 'flex gap-2 items-center p-3 lg:p-4 rounded-lg w-full transition-all'
+              const baseClass = `
+                flex items-center rounded-lg transition-all relative group
+                ${collapsed ? 'justify-center p-3' : 'gap-3 p-3'}
+              `
               const activeClass = isActive
-                ? 'bg-[#2563eb]'
-                : 'hover:bg-gray-100'
+                ? 'bg-[#2563eb] text-white'
+                : 'hover:bg-gray-100 text-gray-700'
               return `${baseClass} ${activeClass}`
             }}
-            style={({ isActive }) => ({
-              fontFamily: 'Poppins, sans-serif', 
-              fontWeight: 500, 
-              lineHeight: '1.4', 
-              color: isActive ? '#ffffff' : '#000000',
-            })}
+            title={collapsed ? 'Manajemen User' : undefined}
           >
             {({ isActive: linkActive }) => (
               <>
                 <div 
-                  className="w-5 h-5 md:w-6 md:h-6" 
+                  className="w-6 h-6 flex-shrink-0" 
                   style={{ color: linkActive ? '#ffffff' : '#666666' }}
                 >
                   <IconUsers />
                 </div>
-                <span className="text-sm lg:text-base truncate">Manajemen User</span>
+                {!collapsed && (
+                  <span className="text-sm font-medium transition-opacity duration-300 truncate">
+                    Manajemen User
+                  </span>
+                )}
+                {/* Tooltip for collapsed state */}
+                {collapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+                    Manajemen User
+                  </div>
+                )}
               </>
             )}
           </NavLink>
@@ -167,29 +208,33 @@ export default function Sidebar({ onClose }) {
       </nav>
 
       {/* Logout Button */}
-      <div className="flex flex-col items-center p-3 md:p-4 lg:p-6 w-full mt-auto border-t border-gray-200 shrink-0">
+      <div className={`border-t border-gray-200 transition-all duration-300 ${collapsed ? 'px-2 py-3' : 'px-4 py-4'}`}>
         <button 
           onClick={() => {
             handleMenuClick()
             navigate('/login')
           }}
-          className="flex gap-2 items-center p-3 lg:p-4 rounded-lg w-full transition-all text-white"
-          style={{ 
-            fontFamily: 'Poppins, sans-serif', 
-            fontWeight: 500, 
-            lineHeight: '1.4', 
-            backgroundColor: '#dc2626',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#991b1b')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#dc2626')}
+          className={`
+            flex items-center rounded-lg transition-all bg-red-600 hover:bg-red-700 text-white w-full relative group
+            ${collapsed ? 'justify-center p-3' : 'gap-3 p-3'}
+          `}
+          title={collapsed ? 'Logout' : undefined}
         >
           <img 
             alt="Logout" 
-            className="w-5 h-5 md:w-6 md:h-6 object-contain" 
+            className="w-6 h-6 object-contain flex-shrink-0" 
             src={imgLogout}
             style={{ filter: 'brightness(0) invert(1)' }}
           />
-          <span className="text-sm lg:text-base">Logout</span>
+          {!collapsed && (
+            <span className="text-sm font-medium">Logout</span>
+          )}
+          {/* Tooltip for collapsed state */}
+          {collapsed && (
+            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-50">
+              Logout
+            </div>
+          )}
         </button>
       </div>
     </div>
@@ -197,5 +242,7 @@ export default function Sidebar({ onClose }) {
 }
 
 Sidebar.propTypes = {
-  onClose: PropTypes.func
+  onClose: PropTypes.func,
+  collapsed: PropTypes.bool,
+  onToggleCollapse: PropTypes.func
 }

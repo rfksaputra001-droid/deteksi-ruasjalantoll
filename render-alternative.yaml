@@ -1,0 +1,88 @@
+# Alternative Render.yaml configuration
+# Use this if the main render.yaml fails due to build timeout or system dependency issues
+
+services:
+  - type: web
+    name: yolo-detection-fullstack-alt
+    runtime: python
+    plan: starter
+    # Use Python runtime instead of Node.js for better OpenCV support
+    buildCommand: |
+      # Install system dependencies
+      apt-get update && apt-get install -y \
+        build-essential \
+        python3-dev \
+        libgl1-mesa-glx \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender-dev \
+        libgomp1 \
+        ffmpeg \
+        libopencv-dev \
+        python3-opencv && \
+      # Install Python dependencies
+      pip install --upgrade pip setuptools wheel && \
+      pip install -r requirements.txt && \
+      # Verify OpenCV
+      python scripts/verify_opencv.py && \
+      # Install Node.js for frontend build
+      curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+      apt-get install -y nodejs && \
+      # Build frontend
+      cd ../frontend && npm install && npm run build
+    
+    # Use Python to start the Node.js backend (hybrid approach)
+    startCommand: |
+      cd backend && \
+      python scripts/verify_opencv.py && \
+      node server.js
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: OPENCV_LOG_LEVEL
+        value: "ERROR"
+      - key: NUMBA_DISABLE_JIT
+        value: "1"
+      - key: LD_LIBRARY_PATH
+        value: "/usr/lib/x86_64-linux-gnu:/usr/local/lib"
+      - key: PYTHONPATH
+        value: "/opt/render/project/src/backend"
+    
+    healthCheckPath: /health
+    disk:
+      name: backend-disk
+      mountPath: /opt/render/project/src/temp
+      sizeGB: 2
+    autoDeploy: false  # Manual deploy for testing
+
+# Minimal configuration for faster builds
+  - type: web
+    name: yolo-detection-minimal
+    runtime: node
+    plan: starter
+    buildCommand: |
+      # Minimal system deps
+      apt-get update && \
+      apt-get install -y python3 python3-pip libgl1-mesa-glx && \
+      # Install specific OpenCV version
+      pip3 install --no-deps opencv-python-headless==4.8.0.76 && \
+      pip3 install numpy==1.24.4 && \
+      # Install other Python deps
+      cd backend && pip3 install -r requirements.txt --no-cache-dir && \
+      # Build frontend
+      cd ../frontend && npm install && npm run build
+    
+    startCommand: cd backend && npm start
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPENCV_LOG_LEVEL
+        value: "ERROR"
+    
+    healthCheckPath: /health
+    autoDeploy: false

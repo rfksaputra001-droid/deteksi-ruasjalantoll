@@ -1,20 +1,59 @@
+# =============================================================================
+# Render.yaml - Docker Deployment Configuration
+# Deploy FastAPI + YOLO + OpenCV application using Docker
+# =============================================================================
+
 services:
   - type: web
-    name: yolo-detection-fullstack
-    runtime: node
+    name: yolo-detection-api
+    runtime: docker
+    region: singapore
     plan: starter
-    buildCommand: |
-      cd backend && npm install &&
-      cd ../frontend && npm install && npm run build
-    startCommand: cd backend && npm start
+    
+    # Docker configuration
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    
+    # Environment variables
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PYTHON_VERSION
-        value: "3.9"
+      - key: PYTHON_ENV
+        value: production
+      - key: PORT
+        value: "8000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: OPENCV_LOG_LEVEL
+        value: "ERROR"
+      - key: QT_QPA_PLATFORM
+        value: "offscreen"
+      - key: TORCH_HOME
+        value: "/app/.torch"
+      - key: YOLO_VERBOSE
+        value: "False"
+      - key: NUMBA_DISABLE_JIT
+        value: "1"
+      - key: DATABASE_NAME
+        value: "yolo_detection"
+      - key: JWT_ALGORITHM
+        value: "HS256"
+      - key: JWT_EXPIRATION_HOURS
+        value: "24"
+      - key: CLOUDINARY_FOLDER
+        value: "yolo-deteksi"
+      - key: CORS_ORIGINS
+        value: "https://deteksi-ruasjalantoll.vercel.app,http://localhost:5173"
+    
     healthCheckPath: /health
+    
     disk:
-      name: backend-disk
-      mountPath: /opt/render/project/src/temp
-      sizeGB: 1
+      name: yolo-storage
+      mountPath: /app/temp
+      sizeGB: 2
+    
     autoDeploy: true
+    
+    buildFilter:
+      paths:
+        - backend/**

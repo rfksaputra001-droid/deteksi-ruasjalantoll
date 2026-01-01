@@ -11,6 +11,13 @@ const IconMenu = () => (
   </svg>
 )
 
+// Sidebar Toggle Icon
+const IconToggle = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+)
+
 const pageNames = {
   '/dashboard': 'Dashboard',
   '/deteksi': 'Deteksi',
@@ -20,7 +27,7 @@ const pageNames = {
   '/petunjuk': 'Petunjuk Penggunaan',
 }
 
-export default function Header({ onMenuClick }) {
+export default function Header({ onMenuClick, onSidebarToggle }) {
   const location = useLocation()
   const [userName, setUserName] = useState('User')
 
@@ -40,7 +47,7 @@ export default function Header({ onMenuClick }) {
 
   return (
     <header className="bg-white border-b border-[#e2e8f0] h-14 md:h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
-      {/* Left side - Menu button (mobile) + Page title */}
+      {/* Left side - Menu button (mobile) + Sidebar toggle (desktop) + Page title */}
       <div className="flex items-center gap-3">
         {/* Hamburger menu - only on mobile */}
         <button 
@@ -50,6 +57,17 @@ export default function Header({ onMenuClick }) {
         >
           <IconMenu />
         </button>
+        
+        {/* Sidebar toggle - only on desktop */}
+        <button 
+          onClick={onSidebarToggle}
+          className="hidden sm:flex p-1.5 hover:bg-gray-100 rounded-lg"
+          aria-label="Toggle sidebar"
+          title="Toggle sidebar"
+        >
+          <IconToggle />
+        </button>
+        
         <h1 className="text-black font-semibold text-base md:text-lg lg:text-xl" style={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600, lineHeight: '1.2' }}>
           {pageName}
         </h1>
@@ -71,5 +89,6 @@ export default function Header({ onMenuClick }) {
 }
 
 Header.propTypes = {
-  onMenuClick: PropTypes.func
+  onMenuClick: PropTypes.func,
+  onSidebarToggle: PropTypes.func
 }

@@ -359,7 +359,7 @@ export default function Deteksi({ onLogout }) {
         <div className="p-3 sm:p-6 bg-gray-50">
           {/* Processing state - show progress spinner */}
           {selectedDetection?.isProcessing ? (
-            <div className="w-full h-64 sm:h-80 md:h-96 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
+            <div className="w-full aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
               <div className="text-center px-4">
                 <svg className="animate-spin h-10 w-10 sm:h-16 sm:w-16 text-blue-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -390,13 +390,15 @@ export default function Deteksi({ onLogout }) {
                 <div className="absolute top-2 left-2 bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium z-10">
                   🎯 Video Hasil Deteksi YOLO
                 </div>
-                <video
-                  src={videoPreview}
-                  controls
-                  autoPlay
-                  className="w-full h-64 sm:h-80 md:h-96 bg-gray-900 rounded-lg"
-                  crossOrigin="anonymous"
-                />
+                <div className="w-full aspect-video bg-gray-900 rounded-lg overflow-hidden">
+                  <video
+                    src={videoPreview}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                    crossOrigin="anonymous"
+                  />
+                </div>
               </div>
               {!selectedDetection.isProcessing && selectedDetection.countingData && (
                     <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-blue-200">
@@ -463,7 +465,7 @@ export default function Deteksi({ onLogout }) {
               )}
             </div>
           ) : (
-            <div className="w-full h-96 bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
+            <div className="w-full aspect-video bg-gray-800 rounded-lg flex items-center justify-center text-gray-400">
               <div className="text-center">
                 <div className="mx-auto mb-4 text-gray-400">
                   <IconPlay />

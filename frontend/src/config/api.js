@@ -11,6 +11,40 @@ console.log('🔧 API Config:', {
   env: import.meta.env.VITE_API_BASE_URL 
 });
 
+// Default fetch configuration for CORS and credentials
+export const fetchConfig = {
+  credentials: 'include', // Include cookies for CORS
+  headers: {
+    'Content-Type': 'application/json',
+  }
+};
+
+// API request helper with proper CORS handling
+export const apiRequest = async (url, options = {}) => {
+  const config = {
+    ...fetchConfig,
+    ...options,
+    headers: {
+      ...fetchConfig.headers,
+      ...options.headers,
+    },
+  };
+
+  // Add Authorization header if token exists
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  try {
+    const response = await fetch(url, config);
+    return response;
+  } catch (error) {
+    console.error('API Request failed:', error);
+    throw error;
+  }
+};
+
 export const API_ENDPOINTS = {
   // Auth endpoints
   LOGIN: `${API_BASE_URL}/api/auth/login`,

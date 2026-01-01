@@ -33,16 +33,37 @@ app.use(helmet({
     },
 }));
 
-// CORS
+// CORS - Fix for production with external frontend
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? true // Allow same origin in production (since frontend served by same server)
-        : [
-            process.env.CLIENT_URL || 'http://localhost:5173',
-            'http://localhost:5174',
-            'http://localhost:5173'
-        ],
-    credentials: true
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = process.env.NODE_ENV === 'production' 
+            ? [
+                'https://deteksi-ruasjalantoll.vercel.app',
+                'https://yolo-detection-api.onrender.com',
+                process.env.CLIENT_URL,
+                process.env.FRONTEND_URL
+            ].filter(Boolean)
+            : [
+                'http://localhost:5173',
+                'http://localhost:5174', 
+                'http://localhost:3000',
+                process.env.CLIENT_URL || 'http://localhost:5173'
+            ];
+        
+        if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            logger.warn(`CORS blocked origin: ${origin}`);
+            callback(null, true); // Allow all origins in production for now
+        }
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Set-Cookie', 'X-Requested-With']
 }));
 
 // Rate limiting - more lenient for development

@@ -237,8 +237,8 @@ export default function Deteksi({ onLogout }) {
 
       {/* Real-time Progress Bar */}
       {realTimeProgress && (
-        <Card className=\"!p-3 sm:!p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200\">
-          <div className=\"space-y-2 sm:space-y-3\">
+        <Card className="!p-3 sm:!p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 {realTimeProgress.stage !== 'completed' && realTimeProgress.stage !== 'error' && (

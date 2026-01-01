@@ -894,8 +894,18 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 `;
 
   return new Promise((resolve, reject) => {
-    const python = spawn('python3', ['-c', pythonCode], {
-      timeout: 3600000 // 1 jam timeout
+    // Use environment variable for Python executable or fallback to python3
+    const pythonExecutable = process.env.PYTHON_EXECUTABLE || 'python';
+    
+    const python = spawn(pythonExecutable, ['-c', pythonCode], {
+      timeout: 3600000, // 1 jam timeout
+      cwd: process.cwd(),
+      env: {
+        ...process.env,
+        PYTHONPATH: process.env.PYTHONPATH || '/app',
+        OPENCV_LOG_LEVEL: 'ERROR',
+        MPLCONFIGDIR: '/tmp/matplotlib'
+      }
     });
 
     let lastProgress = 0;
@@ -952,8 +962,27 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 
     python.stderr.on('data', (data) => {
       const errMsg = data.toString().trim();
-      if (!errMsg.includes('Ultralytics') && !errMsg.includes('YOLOv8') && !errMsg.includes('WARNING')) {
-        logger.warn(`YOLO STDERR: ${errMsg}`);
+      logger.error(`Python STDERR: ${errMsg}`);
+      
+      // Check for common OpenCV/YOLO errors
+      if (errMsg.includes('cv2') || errMsg.includes('OpenCV')) {
+        emitProgress(io, trackingId, {
+          stage: 'error',
+          progress: 0,
+          message: 'Error OpenCV: Pastikan sistem memiliki semua dependencies yang diperlukan'
+        });
+      } else if (errMsg.includes('torch') || errMsg.includes('CUDA')) {
+        emitProgress(io, trackingId, {
+          stage: 'error',
+          progress: 0,
+          message: 'Error PyTorch: Model YOLO gagal dimuat'
+        });
+      } else if (errMsg.includes('ultralytics')) {
+        emitProgress(io, trackingId, {
+          stage: 'error', 
+          progress: 0,
+          message: 'Error YOLO: Model deteksi tidak tersedia'
+        });
       }
     });
 

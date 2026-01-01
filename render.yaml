@@ -24,26 +24,50 @@ services:
         value: "8000"
       - key: HOST
         value: "0.0.0.0"
+      
+      # OpenCV & Python Settings
       - key: OPENCV_LOG_LEVEL
         value: "ERROR"
       - key: QT_QPA_PLATFORM
         value: "offscreen"
+      - key: PYTHONPATH
+        value: "/app"
+      - key: PYTHON_EXECUTABLE
+        value: "python"
+      
+      # YOLO/Torch Settings
       - key: TORCH_HOME
         value: "/app/.torch"
       - key: YOLO_VERBOSE
         value: "False"
       - key: NUMBA_DISABLE_JIT
         value: "1"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      
+      # Database
       - key: DATABASE_NAME
         value: "yolo_detection"
+      
+      # JWT Settings
       - key: JWT_ALGORITHM
         value: "HS256"
       - key: JWT_EXPIRATION_HOURS
         value: "24"
+      
+      # Cloudinary
       - key: CLOUDINARY_FOLDER
         value: "yolo-deteksi"
+      
+      # CORS Settings
       - key: CORS_ORIGINS
         value: "https://deteksi-ruasjalantoll.vercel.app,http://localhost:5173"
+      
+      # Additional Python settings for stability
+      - key: MPLCONFIGDIR
+        value: "/tmp/matplotlib"
+      - key: HF_HOME
+        value: "/app/.huggingface"
     
     healthCheckPath: /health
     

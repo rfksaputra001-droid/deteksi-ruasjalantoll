@@ -46,7 +46,7 @@ export default function Header({ onMenuClick, onSidebarToggle }) {
   const pageName = pageNames[location.pathname] || 'Dashboard'
 
   return (
-    <header className="bg-white border-b border-[#e2e8f0] h-14 md:h-16 flex items-center justify-between px-4 md:px-6 sticky top-0 z-30">
+    <header className="bg-white border-b border-[#e2e8f0] h-12 md:h-14 flex items-center justify-between px-3 md:px-4 sticky top-0 z-30">
       {/* Left side - Menu button (mobile) + Sidebar toggle (desktop) + Page title */}
       <div className="flex items-center gap-3">
         {/* Hamburger menu - only on mobile */}

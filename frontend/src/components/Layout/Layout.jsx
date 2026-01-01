@@ -37,6 +37,7 @@ export default function Layout({ children }) {
       <div className={`
         flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ease-in-out
         ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-64'}
+        ml-0
       `}>
         <Header 
           onMenuClick={() => setSidebarOpen(true)}
@@ -44,7 +45,7 @@ export default function Layout({ children }) {
           sidebarCollapsed={sidebarCollapsed}
         />
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="container mx-auto max-w-7xl p-4 md:p-6 lg:p-8 min-w-0">
+          <div className="container mx-auto max-w-7xl p-2 sm:p-4 md:p-6 min-w-0">
             {children}
           </div>
         </main>

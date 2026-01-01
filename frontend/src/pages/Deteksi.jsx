@@ -220,7 +220,7 @@ export default function Deteksi({ onLogout }) {
   }, [currentPage, fetchDetections])
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-3 sm:space-y-4">
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
@@ -237,8 +237,8 @@ export default function Deteksi({ onLogout }) {
 
       {/* Real-time Progress Bar */}
       {realTimeProgress && (
-        <Card className="!p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-          <div className="space-y-3">
+        <Card className=\"!p-3 sm:!p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200\">
+          <div className=\"space-y-2 sm:space-y-3\">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 {realTimeProgress.stage !== 'completed' && realTimeProgress.stage !== 'error' && (
@@ -334,7 +334,7 @@ export default function Deteksi({ onLogout }) {
 
       {/* Video Player Box */}
       <Card className="!p-0">
-        <div className="p-3 sm:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div className="p-2 sm:p-4 md:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
             <h3 className="text-base sm:text-lg font-semibold text-gray-900">
               {selectedDetection 
@@ -356,7 +356,7 @@ export default function Deteksi({ onLogout }) {
             </button>
           )}
         </div>
-        <div className="p-3 sm:p-6 bg-gray-50">
+        <div className="p-2 sm:p-4 md:p-6 bg-gray-50">
           {/* Processing state - show progress spinner */}
           {selectedDetection?.isProcessing ? (
             <div className="w-full aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
@@ -480,7 +480,7 @@ export default function Deteksi({ onLogout }) {
 
       {/* Results Table */}
       <Card className="!p-0">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-900">Tabel Grafik</h3>
           <button
             onClick={() => {
@@ -523,7 +523,7 @@ export default function Deteksi({ onLogout }) {
             Export CSV
           </button>
         </div>
-        <div className="p-6">
+        <div className="p-3 sm:p-4 md:p-6">
           {detectionData.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg">Belum ada data deteksi</p>

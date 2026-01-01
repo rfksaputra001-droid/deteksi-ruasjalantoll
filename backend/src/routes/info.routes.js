@@ -1,37 +1,18 @@
 const express = require('express');
-const { spawn, execSync } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs');
 const router = express.Router();
 
-// Helper function to find Python executable
-function findPythonExecutable() {
-  const possiblePaths = [
-    '/opt/venv/bin/python',
-    '/usr/bin/python3',
-    '/usr/bin/python',
-    '/usr/local/bin/python3',
-    '/usr/local/bin/python'
-  ];
-  
-  for (const pyPath of possiblePaths) {
-    try {
-      if (fs.existsSync(pyPath)) {
-        return pyPath;
-      }
-    } catch (e) {
-      // Continue
-    }
-  }
-  return '/opt/venv/bin/python'; // Default fallback
-}
+// FIXED: Use exact path from Dockerfile
+const PYTHON_EXECUTABLE = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
 
 // Docker Environment Debug Endpoint
 router.get('/debug', async (req, res) => {
   try {
-    const pythonExecutable = findPythonExecutable();
+    const pythonExecutable = PYTHON_EXECUTABLE;
     
     // Check Python executable
-    const pythonExists = pythonExecutable.startsWith('/') ? fs.existsSync(pythonExecutable) : true;
+    const pythonExists = fs.existsSync(pythonExecutable);
     
     // Get system info
     const systemInfo = {
@@ -54,6 +35,8 @@ router.get('/debug', async (req, res) => {
         tmpExists: fs.existsSync('/tmp'),
         appExists: fs.existsSync('/app'),
         venvExists: fs.existsSync('/opt/venv'),
+        venvBinExists: fs.existsSync('/opt/venv/bin'),
+        venvPythonExists: fs.existsSync('/opt/venv/bin/python'),
         matplotlibExists: fs.existsSync('/tmp/matplotlib')
       }
     };

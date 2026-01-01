@@ -17,3 +17,14 @@
   <script type="module" src="/src/index.jsx"></script>
 </body>
 </html>
+
+FROM node:20-bookworm AS production
+
+# Install Python 3.11 explicitly
+RUN apt-get install python3.11 python3.11-venv ...
+
+# Create venv with same Python
+RUN python3.11 -m venv /opt/venv
+
+# Install packages in same image
+RUN pip install -r requirements.txt

@@ -894,38 +894,20 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
 `;
 
   return new Promise((resolve, reject) => {
-    // Try absolute paths only to avoid shell dependency
-    const possiblePythonPaths = [
-      '/opt/venv/bin/python',    // Docker venv (primary choice)
-      '/usr/bin/python3',        // System Python3
-      '/usr/bin/python',         // System Python
-      '/usr/local/bin/python3',  // Alternative location
-      '/usr/local/bin/python'    // Alternative location
-    ];
-    
-    // Find the first available Python executable
-    let pythonExecutable = '/opt/venv/bin/python'; // Default fallback
-    for (const pyPath of possiblePythonPaths) {
-      try {
-        if (require('fs').existsSync(pyPath)) {
-          pythonExecutable = pyPath;
-          logger.info(`✅ Found Python at: ${pyPath}`);
-          break;
-        }
-      } catch (e) {
-        logger.warn(`❌ Cannot check Python path: ${pyPath}`);
-      }
-    }
+    // FIXED: Use exact path from Dockerfile - no detection needed
+    // In Docker: /opt/venv/bin/python (created by Dockerfile)
+    // Locally: Use PYTHON_EXECUTABLE env var or fallback
+    const pythonExecutable = process.env.PYTHON_EXECUTABLE || '/opt/venv/bin/python';
     
     // Enhanced environment variables for Docker
     const pythonEnv = {
       ...process.env,
-      PYTHONPATH: process.env.PYTHONPATH || '/app:/opt/venv/lib/python3.11/site-packages',
+      PYTHONPATH: '/app:/opt/venv/lib/python3.11/site-packages',
       OPENCV_LOG_LEVEL: 'ERROR',
       MPLCONFIGDIR: '/tmp/matplotlib',
       QT_QPA_PLATFORM: 'offscreen',
       VIRTUAL_ENV: '/opt/venv',
-      PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin:' + (process.env.PATH || ''),
+      PATH: '/opt/venv/bin:/usr/local/bin:/usr/bin:/bin',
       TORCH_HOME: '/app/.torch',
       HF_HOME: '/app/.huggingface',
       YOLO_VERBOSE: 'False',
@@ -935,8 +917,7 @@ print(f'COMPLETED|{vehicle_count_total}|{avg_fps:.1f}', flush=True)
     
     logger.info(`🐍 Using Python: ${pythonExecutable}`);
     logger.info(`📁 Working directory: /app`);
-    logger.info(`🔧 Virtual env: ${pythonEnv.VIRTUAL_ENV}`);
-    logger.info(`🔧 PATH: ${pythonEnv.PATH}`);
+    logger.info(`🔧 PYTHONPATH: ${pythonEnv.PYTHONPATH}`);
     
     const python = spawn(pythonExecutable, ['-c', pythonCode], {
       timeout: 3600000, // 1 jam timeout

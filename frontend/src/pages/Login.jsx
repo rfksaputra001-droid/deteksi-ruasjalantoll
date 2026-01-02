@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { API_ENDPOINTS, apiRequest } from '../config/api'
+import { API_ENDPOINTS, apiRequest } from '../utils/api'
 
 // Original logo from public folder
 const LogoIcon = () => (

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
+import ErrorBoundary from './components/ErrorBoundary'
+import { PageLoading } from './components/UI/Loading'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Deteksi from './pages/Deteksi'
@@ -11,6 +13,7 @@ import InformasiWebsite from './pages/InformasiWebsite'
 import PetunjukPenggunaan from './pages/PetunjukPenggunaan'
 import ManajemenUser from './pages/ManajemenUser'
 import { DeteksiProvider } from './context/DeteksiContext'
+import { isTokenValid, getUserFromToken } from './utils/api'
 
 // Helper function to get user role
 function getUserRole() {
@@ -65,25 +68,52 @@ function SurveyorRoute({ children, isLoggedIn }) {
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem('token')
-    if (token) {
-      setIsLoggedIn(true)
+    console.log('🚀 App initializing...')
+    
+    // Check authentication status
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem('token')
+      const userData = getUserFromToken()
+      
+      if (token && isTokenValid() && userData) {
+        console.log('✅ Valid token found, user logged in:', userData.email)
+        setIsLoggedIn(true)
+        setUser(userData)
+      } else {
+        console.log('❌ No valid token found, user not logged in')
+        setIsLoggedIn(false)
+        setUser(null)
+        
+        // Clear invalid tokens
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
     }
+    
+    checkAuthStatus()
     setLoading(false)
 
     // Listen for storage changes (logout from another tab)
     const handleStorageChange = (e) => {
-      if (e.key === 'token' && !e.newValue) {
-        // Token was removed, logout
-        setIsLoggedIn(false)
+      if (e.key === 'token') {
+        if (!e.newValue) {
+          // Token was removed, logout
+          console.log('🗑️ Token removed in another tab, logging out...')
+          setIsLoggedIn(false)
+          setUser(null)
+        } else {
+          // Token was added, login
+          checkAuthStatus()
+        }
       }
     }
 
     // Listen for token expiration events
-    const handleTokenExpired = () => {
+    const handleTokenExpired = (event) => {
+      console.log('⏰ Token expired event received:', event.detail)
       handleLogout()
     }
 
@@ -97,21 +127,27 @@ export default function App() {
   }, [])
 
   const handleLogin = () => {
+    console.log('✅ User logged in successfully')
+    const userData = getUserFromToken()
     setIsLoggedIn(true)
+    setUser(userData)
   }
 
   const handleLogout = () => {
+    console.log('💪 Logging out user...')
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     setIsLoggedIn(false)
+    setUser(null)
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
+    return <PageLoading message="Memuat aplikasi..." />
   }
 
   return (
-    <DeteksiProvider>
+    <ErrorBoundary>
+      <DeteksiProvider>
       <Routes>
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
@@ -133,5 +169,6 @@ export default function App() {
         <Route path="/admin/users" element={<AdminRoute isLoggedIn={isLoggedIn}><ManajemenUser onLogout={handleLogout} /></AdminRoute>} />
       </Routes>
     </DeteksiProvider>
+    </ErrorBoundary>
   )
 }

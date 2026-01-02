@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import Card from '../components/UI/Card'
 import Table from '../components/UI/Table'
-import { API_ENDPOINTS, apiRequest } from '../config/api'
+import { API_ENDPOINTS, apiRequest } from '../utils/api'
 
 // LOS colors
 const losColors = {

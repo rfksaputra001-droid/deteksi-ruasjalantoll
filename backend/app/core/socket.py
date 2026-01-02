@@ -6,14 +6,21 @@ Production-ready with comprehensive event handling
 import socketio
 import asyncio
 from typing import Dict, Set
+from datetime import datetime
 from app.utils.logger import logger
 
-# Create Socket.IO server with comprehensive options
+# Create Socket.IO server with enhanced authentication and CORS
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins='*',
-    logger=False,
-    engineio_logger=False
+    cors_allowed_origins=[
+        "http://localhost:5173",
+        "http://localhost:5174", 
+        "http://localhost:3000",
+        "https://deteksi-ruasjalantoll.vercel.app",
+        "https://*.vercel.app"  # Allow all Vercel preview URLs
+    ],
+    logger=True,  # Enable for debugging
+    engineio_logger=True
 )
 
 # Create ASGI app
@@ -35,26 +42,67 @@ class SocketManager:
         
         @sio.event
         async def connect(sid, environ, auth):
-            """Handle client connection"""
-            logger.info(f"🔌 Socket.IO client connected: {sid}")
+            """Handle client connection with JWT authentication"""
+            logger.info(f"🔌 Socket.IO client attempting connection: {sid}")
             
             # Extract user info from auth if provided
             user_id = None
-            if auth and 'user_id' in auth:
-                user_id = auth['user_id']
+            user_info = {}
+            
+            if auth:
+                # Handle JWT token authentication
+                token = auth.get('token')
+                if token:
+                    try:
+                        from app.utils.jwt import verify_token
+                        from app.config.database import get_collection
+                        from bson import ObjectId
+                        
+                        payload = verify_token(token)
+                        if payload and payload.get('id'):
+                            user_id = payload['id']
+                            
+                            # Get user details from database
+                            users = get_collection("users")
+                            user = await users.find_one({"_id": ObjectId(user_id)})
+                            
+                            if user:
+                                user_info = {
+                                    'id': user_id,
+                                    'name': user.get('namaUser'),
+                                    'email': user.get('emailUser'),
+                                    'role': user.get('role', 'user')
+                                }
+                                logger.info(f"✅ Socket.IO authenticated user: {user_info['email']}")
+                            else:
+                                logger.warning(f"❌ Socket.IO user not found in database: {user_id}")
+                                return False  # Reject connection
+                        else:
+                            logger.warning(f"❌ Socket.IO invalid token payload")
+                            return False  # Reject connection
+                    except Exception as e:
+                        logger.error(f"❌ Socket.IO token validation error: {e}")
+                        return False  # Reject connection
                 
-                # Track user connection
+                # Fallback to user_id auth
+                elif 'user_id' in auth:
+                    user_id = auth['user_id']
+                    user_info = {'id': user_id}
+            
+            # Track user connection
+            if user_id:
                 if user_id not in self.connected_clients:
                     self.connected_clients[user_id] = set()
                 self.connected_clients[user_id].add(sid)
-                
                 logger.info(f"👤 User {user_id} connected with session {sid}")
             
-            # Send welcome message
+            # Send welcome message with user info
             await sio.emit('connected', {
                 'message': 'Connected to YOLO Detection Server',
                 'session_id': sid,
-                'timestamp': asyncio.get_event_loop().time()
+                'user': user_info,
+                'timestamp': asyncio.get_event_loop().time(),
+                'server_time': datetime.utcnow().isoformat()
             }, room=sid)
         
         @sio.event

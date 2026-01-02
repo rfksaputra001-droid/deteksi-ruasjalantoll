@@ -86,5 +86,25 @@ def get_database():
 
 
 def get_collection(name: str):
-    """Get a specific collection"""
+    """Get a specific collection with fallback handling"""
+    if db is None:
+        logger.warning(f"⚠️  Database not connected, cannot access collection '{name}'")
+        from fastapi import HTTPException
+        # Return a mock collection that throws descriptive errors
+        class MockCollection:
+            async def find_one(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+            async def find(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+            async def insert_one(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+            async def update_one(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+            async def delete_one(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+            async def count_documents(self, *args, **kwargs):
+                raise HTTPException(status_code=503, detail={"success": False, "message": "Database not available"})
+        
+        return MockCollection()
+    
     return db[name]

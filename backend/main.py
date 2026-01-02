@@ -31,17 +31,30 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("🚀 Starting YOLO Detection Backend...")
     
-    # Connect to MongoDB
-    await connect_db()
-    
-    # Test Cloudinary connection
-    await test_cloudinary_connection()
-    
-    # Create necessary directories
-    os.makedirs("/tmp/uploads", exist_ok=True)
-    os.makedirs("/tmp/temp", exist_ok=True)
-    
-    logger.info("✅ Server startup complete!")
+    try:
+        # Connect to MongoDB
+        await connect_db()
+        
+        # Test Cloudinary connection
+        await test_cloudinary_connection()
+        
+        # Create necessary directories
+        os.makedirs("/tmp/uploads", exist_ok=True)
+        os.makedirs("/tmp/temp", exist_ok=True)
+        os.makedirs("/tmp/models", exist_ok=True)
+        
+        # Verify YOLO model availability
+        model_path = "/tmp/models/yolov8n.pt"
+        if not os.path.exists(model_path):
+            logger.info("📥 Downloading YOLO model...")
+            # YOLO will auto-download on first use
+        
+        logger.info("✅ Server startup complete!")
+        
+    except Exception as e:
+        logger.error(f"❌ Startup error: {e}")
+        # Don't crash, just log the error
+        logger.info("⚠️  Continuing startup with limited functionality")
     
     yield
     
@@ -125,13 +138,18 @@ async def api_info():
         }
     }
 
-# Include routers
-app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
-app.include_router(deteksi.router, prefix="/api/deteksi", tags=["Detection"])
-app.include_router(histori.router, prefix="/api/histori", tags=["History"])
-app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
-app.include_router(perhitungan.router, prefix="/api/perhitungan", tags=["Calculation"])
+# Include routers with proper error handling
+try:
+    app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+    app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+    app.include_router(deteksi.router, prefix="/api/deteksi", tags=["Detection"])
+    app.include_router(histori.router, prefix="/api/histori", tags=["History"])
+    app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+    app.include_router(perhitungan.router, prefix="/api/perhitungan", tags=["Calculation"])
+    logger.info("✅ All API routes registered successfully")
+except Exception as e:
+    logger.error(f"❌ Error registering routes: {e}")
+    raise
 
 
 if __name__ == "__main__":

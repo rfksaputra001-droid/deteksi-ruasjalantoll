@@ -31,44 +31,41 @@ export function DeteksiProvider({ children }) {
     currentPageRef.current = currentPage
   }, [currentPage])
 
-  // Fetch detections - use ref to avoid dependency issues
-  const fetchDetections = useCallback(async (page) => {
-    // Don't fetch if no token (not logged in)
-    const token = localStorage.getItem('token')
-    if (!token) {
-      return
+  // Clear messages after timeout
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError('')
+        setSuccessMessage('')
+      }, 5000)
+      return () => clearTimeout(timer)
     }
+  }, [error, successMessage])
+
+  const fetchDetections = useCallback(async () => {
+    if (loading) return
     
-    const pageToFetch = page ?? currentPageRef.current
-    setLoading(true)
     try {
-      const response = await apiRequest(`${API_ENDPOINTS.DETECTION_LIST}?page=${pageToFetch}&limit=${itemsPerPage}`)
+      setLoading(true)
+      setError('')
+      
+      const response = await apiRequest(`${API_ENDPOINTS.DETECTION_LIST}?page=${currentPageRef.current}&limit=${itemsPerPage}`)
+      
       if (response.success) {
-        setDetectionData(response.data.map((item, index) => ({
-          id: index + 1 + (pageToFetch - 1) * itemsPerPage,
-          ...item
-        })))
-        
-        if (response.pagination) {
-          setTotalPages(response.pagination.pages || 1)
-          setTotalItems(response.pagination.total || 0)
-        }
-        
-        const processing = new Set()
-        response.data.forEach(item => {
-          if (item.status === 'processing') {
-            processing.add(item._id)
-          }
-        })
-        setProcessingDetections(processing)
+        setDetectionData(response.data || [])
+        setTotalPages(response.pagination?.total_pages || 1)
+        setTotalItems(response.pagination?.total_items || 0)
+      } else {
+        throw new Error(response.message || 'Failed to fetch detections')
       }
     } catch (err) {
-      console.error('Failed to fetch detections:', err)
-      setError('Gagal memuat data deteksi')
+      console.error('Error fetching detections:', err)
+      setError(`Gagal memuat data deteksi: ${err.message}`)
+      setDetectionData([])
     } finally {
       setLoading(false)
     }
-  }, []) // No dependencies - uses ref for currentPage
+  }, [])
 
   // Setup Socket.IO connection - only once
   useEffect(() => {
@@ -81,7 +78,6 @@ export function DeteksiProvider({ children }) {
       reconnectionDelay: 1000,
       timeout: 20000,
       forceNew: false,
-      // Add path for Socket.IO endpoint
       path: '/socket.io/'
     })
 
@@ -104,198 +100,236 @@ export function DeteksiProvider({ children }) {
       if (data.stage === 'completed') {
         fetchDetections()
         
-        setSuccessMessage(`Deteksi selesai! Total kendaraan: ${data.countingData?.totalCounted || data.totalVehicles || 0}`)
-        setTimeout(() => setSuccessMessage(''), 5000)
+        // Remove from processing set
+        setProcessingDetections(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(data.trackingId)
+          return newSet
+        })
         
-        // Update UI if this is our current tracking
-        setCurrentTrackingId(prevTrackingId => {
-          if (prevTrackingId && data.trackingId === prevTrackingId.toString()) {
-            setUploading(false)
-            setRealTimeProgress(null)
-            setUploadProgress('')
-            
-            if (data.outputVideoUrl) {
-              setVideoPreview(data.outputVideoUrl)
-              setSelectedDetection({
-                _id: data.detectionId,
-                cloudinaryVideoUrl: data.outputVideoUrl,
-                totalVehicles: data.totalVehicles,
-                accuracy: data.accuracy,
-                processingTime: data.processingTime,
-                countingData: data.countingData,
-                isProcessing: false
-              })
-            }
-            return null
-          }
-          return prevTrackingId
+        // Clear real-time progress if it's for current tracking
+        if (data.trackingId === currentTrackingId) {
+          setRealTimeProgress(null)
+          setCurrentTrackingId(null)
+        }
+        
+        setSuccessMessage('Deteksi video berhasil diselesaikan!')
+      } else if (data.stage === 'error') {
+        // Remove from processing set
+        setProcessingDetections(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(data.trackingId)
+          return newSet
         })
+        
+        // Clear progress
+        if (data.trackingId === currentTrackingId) {
+          setRealTimeProgress(null)
+          setCurrentTrackingId(null)
+        }
+        
+        setError(`Deteksi gagal: ${data.message || data.error}`)
       }
+    })
+
+    // Listen for real-time detection progress
+    socket.on('detection-progress', (data) => {
+      console.log('📊 Detection progress:', data)
       
-      if (data.stage === 'error') {
-        fetchDetections()
-        setCurrentTrackingId(prevTrackingId => {
-          if (prevTrackingId && data.trackingId === prevTrackingId.toString()) {
-            setUploading(false)
-            setRealTimeProgress(null)
-            setError(data.message)
-            setUploadProgress('')
-            return null
-          }
-          return prevTrackingId
-        })
+      // Update real-time progress if this is the current tracking ID
+      if (data.trackingId === currentTrackingId) {
+        setRealTimeProgress(data)
       }
     })
 
     socketRef.current = socket
 
-    // Initial fetch
-    fetchDetections()
-
     return () => {
+      console.log('🔌 Cleaning up Socket.IO connection')
       socket.disconnect()
     }
-  }, [fetchDetections]) // fetchDetections is stable now
+  }, []) 
 
-  // Refetch when page changes
+  // Join detection room when tracking ID changes
   useEffect(() => {
-    fetchDetections(currentPage)
-  }, [currentPage, fetchDetections])
-
-  // Listen for real-time progress updates
-  useEffect(() => {
-    if (!socketRef.current || !currentTrackingId) return
-
-    const eventName = `detection-progress-${currentTrackingId}`
-    
-    const handleProgress = (data) => {
-      console.log('📊 Progress update:', data)
-      setRealTimeProgress(data)
-      setUploadProgress(data.message)
-
-      setSelectedDetection(prev => ({
-        ...prev,
-        isProcessing: true,
-        progress: data.progress,
-        frameProgress: data.frameProgress
-      }))
-    }
-
-    socketRef.current.on(eventName, handleProgress)
-
-    return () => {
-      socketRef.current?.off(eventName, handleProgress)
+    if (currentTrackingId && socketRef.current) {
+      console.log('📺 Joining detection room:', currentTrackingId)
+      socketRef.current.emit('join_detection', { tracking_id: currentTrackingId })
+      
+      return () => {
+        if (socketRef.current) {
+          console.log('📺 Leaving detection room:', currentTrackingId)
+          socketRef.current.emit('leave_detection', { tracking_id: currentTrackingId })
+        }
+      }
     }
   }, [currentTrackingId])
 
-  // Handle delete detection
-  const handleDeleteDetection = async (detectionId) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus deteksi ini? Data tidak dapat dikembalikan.')) {
+  // Upload video function
+  const uploadVideo = async (file) => {
+    if (uploading) {
+      console.warn('Upload already in progress')
       return
     }
 
     try {
-      await apiRequest(API_ENDPOINTS.DELETE_DETECTION(detectionId), {
-        method: 'DELETE'
-      })
+      setUploading(true)
+      setUploadProgress('Preparing upload...')
+      setError('')
+      setSuccessMessage('')
 
-      setDetectionData(prev => prev.filter(item => item._id !== detectionId))
-      setTotalItems(prev => prev - 1)
-      
-      if (selectedDetection?._id === detectionId) {
-        setSelectedDetection(null)
-        setVideoPreview(null)
+      // Validate file
+      if (!file.type.startsWith('video/')) {
+        throw new Error('File harus berupa video')
       }
 
-      setError('')
-      setSuccessMessage('Deteksi berhasil dihapus!')
-      setTimeout(() => setSuccessMessage(''), 5000)
+      if (file.size > 50 * 1024 * 1024) { // 50MB limit
+        throw new Error('File terlalu besar (maksimal 50MB)')
+      }
+
+      setUploadProgress('Uploading video...')
+
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await apiRequest(API_ENDPOINTS.UPLOAD_VIDEO, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          // Remove Content-Type to let browser set it with boundary for FormData
+        }
+      })
+
+      if (response.success && response.data) {
+        const { tracking_id, filename } = response.data
+        
+        setUploadProgress('Upload successful! Processing video...')
+        setSuccessMessage('Video berhasil diunggah dan sedang diproses')
+        
+        // Start tracking this detection
+        setCurrentTrackingId(tracking_id)
+        setProcessingDetections(prev => new Set([...prev, tracking_id]))
+        
+        // Initialize progress
+        setRealTimeProgress({
+          trackingId: tracking_id,
+          stage: 'starting',
+          message: 'Memulai deteksi video...',
+          progress: 0
+        })
+        
+        setTimeout(() => {
+          setUploadProgress('')
+        }, 3000)
+        
+        return { tracking_id, filename }
+      } else {
+        throw new Error(response.message || 'Upload failed')
+      }
 
     } catch (err) {
-      console.error('Failed to delete detection:', err)
-      setError(`Gagal menghapus deteksi: ${err.message}`)
-      setSuccessMessage('')
+      console.error('Upload error:', err)
+      setError(`Gagal mengunggah video: ${err.message}`)
+      setUploadProgress('')
+      throw err
+    } finally {
+      setUploading(false)
     }
   }
 
-  // Handle view result
-  const handleViewResult = (detection) => {
-    console.log('🎯 Viewing detection result:', detection)
-    setSelectedDetection({
-      ...detection,
-      isProcessing: false,
-      isInputVideo: false
-    })
-    const videoUrl = detection.cloudinaryVideoUrl || detection.outputVideoPath || API_ENDPOINTS.DETECTION_VIDEO(detection._id)
-    console.log('🎬 Playing output video URL:', videoUrl)
-    setVideoPreview(videoUrl)
+  // Delete detection function
+  const deleteDetection = async (detectionId) => {
+    try {
+      setLoading(true)
+      const response = await apiRequest(API_ENDPOINTS.DELETE_DETECTION(detectionId), {
+        method: 'DELETE'
+      })
+      
+      if (response.success) {
+        setSuccessMessage('Data deteksi berhasil dihapus')
+        await fetchDetections() // Refresh the list
+      } else {
+        throw new Error(response.message || 'Gagal menghapus data')
+      }
+    } catch (err) {
+      console.error('Delete error:', err)
+      setError(`Gagal menghapus data: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Handle view input video
-  const handleViewInputVideo = (detection) => {
-    console.log('📹 Viewing input video:', detection)
-    setSelectedDetection({ ...detection, isInputVideo: true, isProcessing: false })
-    const videoUrl = detection.inputCloudinaryUrl || API_ENDPOINTS.DETECTION_VIDEO(detection._id)
-    console.log('🎬 Playing input video URL:', videoUrl)
-    setVideoPreview(videoUrl)
+  // Navigation functions
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
   }
 
-  const value = {
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page)
+    }
+  }
+
+  // Fetch detections when page changes
+  useEffect(() => {
+    fetchDetections()
+  }, [currentPage, fetchDetections])
+
+  const contextValue = {
     // State
     detectionData,
-    setDetectionData,
     videoPreview,
-    setVideoPreview,
     selectedDetection,
-    setSelectedDetection,
     currentPage,
-    setCurrentPage,
     totalPages,
-    setTotalPages,
     totalItems,
-    setTotalItems,
     loading,
-    setLoading,
     uploading,
-    setUploading,
     error,
-    setError,
     successMessage,
-    setSuccessMessage,
     uploadProgress,
-    setUploadProgress,
     processingDetections,
-    setProcessingDetections,
     realTimeProgress,
-    setRealTimeProgress,
     currentTrackingId,
-    setCurrentTrackingId,
-    itemsPerPage,
     
-    // Refs
-    socketRef,
-    
-    // Methods
+    // Actions
+    uploadVideo,
+    deleteDetection,
     fetchDetections,
-    handleDeleteDetection,
-    handleViewResult,
-    handleViewInputVideo,
+    setVideoPreview,
+    setSelectedDetection,
+    setError,
+    setSuccessMessage,
+    goToNextPage,
+    goToPrevPage,
+    goToPage,
+    
+    // Pagination
+    itemsPerPage
   }
 
   return (
-    <DeteksiContext.Provider value={value}>
+    <DeteksiContext.Provider value={contextValue}>
       {children}
     </DeteksiContext.Provider>
   )
 }
 
 DeteksiProvider.propTypes = {
-  children: PropTypes.node.isRequired
+  children: PropTypes.node.isRequired,
 }
 
-export function useDeteksi() {
+export const useDeteksi = () => {
   const context = useContext(DeteksiContext)
-  if (!context) {
+  if (context === null) {
     throw new Error('useDeteksi must be used within a DeteksiProvider')
   }
   return context

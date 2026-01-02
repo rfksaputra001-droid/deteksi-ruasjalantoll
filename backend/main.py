@@ -89,11 +89,22 @@ socket_manager.mount_to(app)
 async def health_check():
     """Health check endpoint"""
     import datetime
+    
+    # Check environment variables
+    env_status = {
+        "MONGODB_URI": "✅ Set" if os.getenv("MONGODB_URI") else "❌ Missing",
+        "CLOUDINARY_CLOUD_NAME": "✅ Set" if os.getenv("CLOUDINARY_CLOUD_NAME") else "❌ Missing",
+        "DATABASE_NAME": os.getenv("DATABASE_NAME", "yolo_detection"),
+        "PORT": os.getenv("PORT", "3000")
+    }
+    
     return {
         "status": "success",
         "message": "Server is running",
         "timestamp": datetime.datetime.utcnow().isoformat(),
-        "version": "2.0.0"
+        "version": "2.0.0",
+        "environment": env_status,
+        "python_version": sys.version
     }
 
 # API info endpoint

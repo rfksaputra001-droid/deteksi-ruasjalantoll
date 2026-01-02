@@ -11,9 +11,11 @@ from bson import ObjectId
 try:
     from pydantic import EmailStr
     EmailType = EmailStr
+    EMAIL_PATTERN = None  # EmailStr handles validation internally
 except ImportError:
     # Fallback to str with email pattern validation
     EmailType = str
+    EMAIL_PATTERN = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
 
 
 class PyObjectId(str):
@@ -31,7 +33,7 @@ class PyObjectId(str):
 
 class UserBase(BaseModel):
     namaUser: str = Field(..., min_length=1, max_length=100)
-    emailUser: EmailType = Field(..., pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' if EmailType == str else None)
+    emailUser: EmailType = Field(..., pattern=EMAIL_PATTERN)
     role: str = Field(default="user", pattern="^(admin|surveyor|user)$")
     isActive: bool = True
     phoneNumber: Optional[str] = None
@@ -44,7 +46,7 @@ class UserCreate(UserBase):
 
 class UserUpdate(BaseModel):
     namaUser: Optional[str] = Field(None, min_length=1, max_length=100)
-    emailUser: Optional[EmailType] = Field(None, pattern=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$' if EmailType == str else None)
+    emailUser: Optional[EmailType] = Field(None, pattern=EMAIL_PATTERN)
     role: Optional[str] = Field(None, pattern="^(admin|surveyor|user)$")
     isActive: Optional[bool] = None
     phoneNumber: Optional[str] = None

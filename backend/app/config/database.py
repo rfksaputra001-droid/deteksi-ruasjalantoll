@@ -18,8 +18,11 @@ async def connect_db():
     mongodb_uri = os.getenv("MONGODB_URI")
     
     if not mongodb_uri:
-        logger.error("❌ MONGODB_URI not set in environment variables")
-        raise ValueError("MONGODB_URI is required")
+        logger.warning("⚠️  MONGODB_URI not set - using fallback or skipping database")
+        # In production, this should be set in Render environment variables
+        # For now, we'll create a placeholder to prevent startup failure
+        logger.warning("⚠️  Database connection will be skipped for this startup")
+        return
     
     try:
         client = AsyncIOMotorClient(mongodb_uri)

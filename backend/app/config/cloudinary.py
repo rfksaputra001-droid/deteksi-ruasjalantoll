@@ -21,12 +21,21 @@ def configure_cloudinary():
 async def test_cloudinary_connection():
     """Test Cloudinary connection"""
     try:
+        # Check if Cloudinary env vars are set
+        cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
+        api_key = os.getenv("CLOUDINARY_API_KEY")
+        api_secret = os.getenv("CLOUDINARY_API_SECRET")
+        
+        if not all([cloud_name, api_key, api_secret]):
+            logger.warning("⚠️  Cloudinary environment variables not fully set - skipping connection test")
+            return False
+            
         configure_cloudinary()
         cloudinary.api.ping()
         logger.info("✅ Cloudinary connected successfully")
         return True
     except Exception as e:
-        logger.error(f"❌ Cloudinary connection failed: {str(e)}")
+        logger.warning(f"⚠️  Cloudinary connection failed: {str(e)} - continuing without Cloudinary")
         return False
 
 

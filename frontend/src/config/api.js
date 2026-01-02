@@ -1,5 +1,4 @@
-// API Configuration
-// Always use the full backend URL from environment variable
+// API Configuration with enhanced CORS handling
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 // Socket.IO URL - use same protocol as API base URL
@@ -11,18 +10,23 @@ export const SOCKET_URL = (() => {
 console.log('🔧 API Config:', { 
   API_BASE_URL, 
   SOCKET_URL,
-  env: import.meta.env.VITE_API_BASE_URL 
+  env: import.meta.env.VITE_API_BASE_URL,
+  mode: import.meta.env.MODE,
+  origin: window.location.origin
 });
 
-// Default fetch configuration for CORS and credentials
+// Enhanced fetch configuration for CORS and credentials
 export const fetchConfig = {
-  credentials: 'include', // Include cookies for CORS
+  credentials: 'include', // Always include cookies for CORS
+  mode: 'cors', // Explicitly set CORS mode
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Cache-Control': 'no-cache',
   }
 };
 
-// API request helper
+// Enhanced API request helper with better CORS handling
 export const apiRequest = async (url, options = {}) => {
   const config = {
     ...fetchConfig,
@@ -35,6 +39,8 @@ export const apiRequest = async (url, options = {}) => {
   };
 
   try {
+    console.log('🔄 API Request:', { url, method: config.method || 'GET', origin: window.location.origin });
+    
     const response = await fetch(url, config);
 
     // Check if response is JSON
@@ -46,10 +52,13 @@ export const apiRequest = async (url, options = {}) => {
     } else {
       // Handle non-JSON responses
       const text = await response.text();
+      console.warn('⚠️ Non-JSON response:', text);
       throw new Error(text || 'Server error - invalid response format');
     }
 
     if (!response.ok) {
+      console.error('❌ API Error:', { status: response.status, data });
+      
       // Handle token-related errors
       if (response.status === 401) {
         if (data.code === 'TOKEN_INVALID' || data.code === 'TOKEN_MISSING' || data.code === 'TOKEN_MALFORMED') {

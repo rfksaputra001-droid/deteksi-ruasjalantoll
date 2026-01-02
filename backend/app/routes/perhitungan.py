@@ -319,6 +319,33 @@ async def hitung_from_deteksi(
         )
 
 
+@router.get("/referensi")
+async def get_referensi():
+    """Get PKJI 2023 reference data"""
+    try:
+        referensi_data = {
+            "tipeJalan": list(KAPASITAS_DASAR.keys()),
+            "lebarLajur": list(FAKTOR_LEBAR.keys()),
+            "faktorPemisah": list(FAKTOR_PEMISAH.keys()),
+            "hambatanSamping": list(FAKTOR_HAMBATAN.keys()),
+            "ukuranKota": list(FAKTOR_KOTA.keys()),
+            "emp": EMP,
+            "losThresholds": LOS_THRESHOLDS
+        }
+        
+        return {
+            "success": True,
+            "data": referensi_data
+        }
+        
+    except Exception as e:
+        logger.error(f"Get referensi error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "message": str(e)}
+        )
+
+
 @router.get("/")
 async def list_perhitungan(
     page: int = Query(1, ge=1),
@@ -372,6 +399,13 @@ async def list_perhitungan(
 async def get_perhitungan(perhitungan_id: str, user: dict = Depends(get_current_user)):
     """Get single calculation by ID"""
     try:
+        # Validate ObjectId format
+        if not ObjectId.is_valid(perhitungan_id):
+            raise HTTPException(
+                status_code=400,
+                detail={"success": False, "message": f"Invalid perhitungan ID format: {perhitungan_id}"}
+            )
+        
         perhitungan = get_collection("perhitungan")
         
         result = await perhitungan.find_one({"_id": ObjectId(perhitungan_id)})

@@ -134,7 +134,7 @@ export const API_ENDPOINTS = {
   PERHITUNGAN_LIST: `${API_BASE_URL}/api/perhitungan/list`,
   PERHITUNGAN_DETAIL: (id) => `${API_BASE_URL}/api/perhitungan/${id}`,
   PERHITUNGAN_REFERENSI: `${API_BASE_URL}/api/perhitungan/reference`,
-  PERHITUNGAN_DETEKSI_AVAILABLE: `${API_BASE_URL}/api/perhitungan/deteksi-available`,
+  PERHITUNGAN_DETEKSI_AVAILABLE: `${API_BASE_URL}/api/perhitungan/available-detections`,
   DELETE_PERHITUNGAN: (id) => `${API_BASE_URL}/api/perhitungan/${id}`,
 
   // Admin endpoints

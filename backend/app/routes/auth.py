@@ -89,10 +89,13 @@ async def login(request: UserLoginRequest):
     try:
         users = get_collection("users")
         
+        logger.info(f"Login attempt for email: {request.emailUser}")
+        
         # Find user
         user = await users.find_one({"emailUser": request.emailUser.lower()})
         
         if not user:
+            logger.warning(f"Login failed - User not found: {request.emailUser}")
             raise HTTPException(
                 status_code=401,
                 detail={"status": "error", "message": "Email atau password salah"}
@@ -100,6 +103,7 @@ async def login(request: UserLoginRequest):
         
         # Check if active
         if not user.get("isActive", True):
+            logger.warning(f"Login failed - User inactive: {request.emailUser}")
             raise HTTPException(
                 status_code=403,
                 detail={"status": "error", "message": "Akun Anda telah dinonaktifkan"}
@@ -107,6 +111,7 @@ async def login(request: UserLoginRequest):
         
         # Verify password
         if not verify_password(request.passwordUser, user.get("passwordUser", "")):
+            logger.warning(f"Login failed - Wrong password for: {request.emailUser}")
             raise HTTPException(
                 status_code=401,
                 detail={"status": "error", "message": "Email atau password salah"}
@@ -213,3 +218,49 @@ async def logout(user: dict = Depends(get_current_user)):
         "status": "success",
         "message": "Logout berhasil"
     }
+
+
+@router.post("/create-test-user")
+async def create_test_user():
+    """Create a test user for debugging (REMOVE IN PRODUCTION)"""
+    try:
+        users = get_collection("users")
+        
+        # Check if test user exists
+        existing = await users.find_one({"emailUser": "test@test.com"})
+        if existing:
+            return {
+                "status": "success",
+                "message": "Test user sudah ada",
+                "data": {
+                    "email": "test@test.com",
+                    "password": "test123"
+                }
+            }
+        
+        # Create test user
+        test_user = {
+            "namaUser": "Test User",
+            "emailUser": "test@test.com",
+            "passwordUser": hash_password("test123"),
+            "role": "surveyor",
+            "isActive": True,
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+        
+        await users.insert_one(test_user)
+        
+        logger.info("Test user created: test@test.com")
+        
+        return {
+            "status": "success",
+            "message": "Test user berhasil dibuat",
+            "data": {
+                "email": "test@test.com",
+                "password": "test123"
+            }
+        }
+    except Exception as e:
+        logger.error(f"Create test user error: {str(e)}")
+        raise HTTPException(status_code=500, detail={"status": "error", "message": str(e)})

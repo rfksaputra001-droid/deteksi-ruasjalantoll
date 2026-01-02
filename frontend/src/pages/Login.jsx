@@ -48,13 +48,18 @@ export default function Login({ onLogin }) {
   // Debug function to test token
   const testToken = async () => {
     const token = localStorage.getItem('token')
-    console.log('Testing token:', token)
+    console.log('🧪 Testing token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN')
+    
+    if (!token) {
+      console.warn('❌ No token to test')
+      return
+    }
     
     try {
       const response = await apiRequest(API_ENDPOINTS.DETECTION_LIST)
-      console.log('Token test result:', response)
+      console.log('✅ Token test result:', response)
     } catch (error) {
-      console.error('Token test error:', error)
+      console.error('❌ Token test error:', error)
     }
   }
 
@@ -92,8 +97,11 @@ export default function Login({ onLogin }) {
           localStorage.setItem('token', data.data.token)
           localStorage.setItem('user', JSON.stringify(data.data.user))
           
-          console.log('Token stored successfully:', data.data.token.substring(0, 20) + '...')
-          console.log('User stored:', data.data.user)
+          console.log('✅ Login successful! Token stored:', data.data.token.substring(0, 20) + '...')
+          console.log('✅ User stored:', data.data.user)
+          
+          // Test token immediately
+          await testToken()
           
           // Call onLogin to update App state
           onLogin()
@@ -103,14 +111,16 @@ export default function Login({ onLogin }) {
             navigate('/dashboard', { replace: true })
           }, 100)
         } else {
+          console.error('❌ Login response missing token:', data)
           throw new Error('Login berhasil tapi token tidak ditemukan dalam response')
         }
       } else {
-        setError(data.message || `API Error: ${response.status} - ${response.statusText}`)
+        console.error('❌ Login failed:', { status: response.status, data })
+        setError(data.message || data.detail?.message || `API Error: ${response.status} - ${response.statusText}`)
       }
     } catch (error) {
+      console.error('❌ Login error:', error)
       setError(error.message || 'Login gagal. Silakan coba lagi.')
-      console.error('Login error:', error)
     } finally {
       setLoading(false)
     }

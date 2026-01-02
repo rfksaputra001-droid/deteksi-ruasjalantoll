@@ -67,33 +67,62 @@ export default function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = localStorage.getItem('token')
-    if (token) {
-      setIsLoggedIn(true)
-    }
-    setLoading(false)
+    // Check if user is already logged in and validate token
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      
+      if (token) {
+        console.log('🔍 Validating existing token on app start...');
+        try {
+          // Test token with /me endpoint
+          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://deteksi-ruasjalantoll.onrender.com'}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          
+          if (response.ok) {
+            console.log('✅ Token is valid - staying logged in');
+            setIsLoggedIn(true);
+          } else {
+            console.warn('❌ Token is invalid - clearing auth');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setIsLoggedIn(false);
+          }
+        } catch (error) {
+          console.error('❌ Token validation failed:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setIsLoggedIn(false);
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    checkAuth();
 
     // Listen for storage changes (logout from another tab)
     const handleStorageChange = (e) => {
       if (e.key === 'token' && !e.newValue) {
         // Token was removed, logout
-        setIsLoggedIn(false)
+        setIsLoggedIn(false);
       }
-    }
+    };
 
     // Listen for token expiration events
     const handleTokenExpired = () => {
-      handleLogout()
-    }
+      handleLogout();
+    };
 
-    window.addEventListener('storage', handleStorageChange)
-    window.addEventListener('tokenExpired', handleTokenExpired)
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('tokenExpired', handleTokenExpired);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('tokenExpired', handleTokenExpired)
-    }
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
   }, [])
 
   const handleLogin = () => {

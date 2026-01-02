@@ -61,15 +61,18 @@ export const apiRequest = async (url, options = {}) => {
       
       // Handle token-related errors
       if (response.status === 401) {
-        if (data.code === 'TOKEN_INVALID' || data.code === 'TOKEN_MISSING' || data.code === 'TOKEN_MALFORMED') {
-          // Clear local storage and dispatch event
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          
-          // Dispatch custom event for token expiration
-          window.dispatchEvent(new CustomEvent('tokenExpired'));
-          
-          // Redirect to login
+        console.warn('🚫 401 Unauthorized - clearing auth and redirecting to login');
+        console.warn('Response data:', data);
+        
+        // Clear local storage and dispatch event
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Dispatch custom event for token expiration
+        window.dispatchEvent(new CustomEvent('tokenExpired'));
+        
+        // Only redirect if not already on login page
+        if (window.location.pathname !== '/login') {
           window.location.href = '/login';
           return;
         }
@@ -154,9 +157,11 @@ export const getAuthHeaders = () => {
     ...(token && { 'Authorization': `Bearer ${token}` }),
   };
   
-  // Only log when there's no token (debug missing token issues)
-  if (!token) {
-    console.warn('No authentication token found in localStorage');
+  // Debug token presence
+  if (token) {
+    console.log('🔑 Auth token found:', token.substring(0, 20) + '...');
+  } else {
+    console.warn('⚠️ No authentication token found in localStorage');
   }
   
   return headers;

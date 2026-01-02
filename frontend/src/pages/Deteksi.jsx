@@ -173,7 +173,7 @@ export default function Deteksi({ onLogout }) {
     try {
       // Upload to backend
       const formData = new FormData()
-      formData.append('video', file)
+      formData.append('file', file)
 
       setUploadProgress('Mengirim video ke server...')
 

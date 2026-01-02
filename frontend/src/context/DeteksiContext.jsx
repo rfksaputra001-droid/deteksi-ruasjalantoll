@@ -173,7 +173,7 @@ export function DeteksiProvider({ children }) {
       setError('')
       
       const formData = new FormData()
-      formData.append('video', file)
+      formData.append('file', file)
       
       const response = await fetch(API_ENDPOINTS.UPLOAD_VIDEO, {
         method: 'POST',

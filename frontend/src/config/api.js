@@ -133,7 +133,7 @@ export const API_ENDPOINTS = {
   PERHITUNGAN_SIMPLE_CONSTANTS: `${API_BASE_URL}/api/perhitungan/simple-constants`,
   PERHITUNGAN_LIST: `${API_BASE_URL}/api/perhitungan/list`,
   PERHITUNGAN_DETAIL: (id) => `${API_BASE_URL}/api/perhitungan/${id}`,
-  PERHITUNGAN_REFERENSI: `${API_BASE_URL}/api/perhitungan/referensi`,
+  PERHITUNGAN_REFERENSI: `${API_BASE_URL}/api/perhitungan/reference`,
   PERHITUNGAN_DETEKSI_AVAILABLE: `${API_BASE_URL}/api/perhitungan/deteksi-available`,
   DELETE_PERHITUNGAN: (id) => `${API_BASE_URL}/api/perhitungan/${id}`,
 

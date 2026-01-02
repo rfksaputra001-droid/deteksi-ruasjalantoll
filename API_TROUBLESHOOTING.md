@@ -18,11 +18,24 @@ async def get_history_list(...):
 **Problem**: Frontend and backend endpoint naming inconsistency
 **Solution**: Added compatibility aliases for all critical endpoints
 
-**Frontend Endpoints**:
-- `${API_BASE_URL}/api/histori/list` ✅ Now works
-- `${API_BASE_URL}/api/histori/detail/${id}` ✅ Already works
+### 3. HTTP 404 (Not Found) - Root Endpoint Missing
+**Problem**: Render health check fails - no root `/` endpoint
+**Solution**: Added root endpoint for health check and service discovery
 
-### 3. Socket.IO WSS Connection Failed
+**Root Endpoint Added**:
+```python
+@app.get("/")
+async def root():
+    """Root endpoint for health check"""
+    return {
+        "status": "online",
+        "message": "🚀 YOLO Detection Backend API", 
+        "version": "2.0.0",
+        "endpoints": {...}
+    }
+```
+
+### 4. Socket.IO WSS Connection Failed
 **Problem**: Frontend trying to connect to WS/WSS when should use HTTP/HTTPS
 **Solution**: Let Socket.IO client handle protocol conversion automatically
 

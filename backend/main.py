@@ -97,6 +97,24 @@ app.add_middleware(
 # Mount Socket.IO
 socket_manager.mount_to(app)
 
+# Root endpoint - for Render health check
+@app.get("/")
+async def root():
+    """Root endpoint for health check"""
+    import datetime
+    return {
+        "status": "online",
+        "message": "🚀 YOLO Detection Backend API",
+        "version": "2.0.0",
+        "endpoints": {
+            "health": "/health",
+            "api": "/api", 
+            "docs": "/docs",
+            "dashboard": "/backend-info"
+        },
+        "timestamp": datetime.datetime.utcnow().isoformat()
+    }
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():

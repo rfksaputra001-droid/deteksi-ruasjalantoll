@@ -319,6 +319,49 @@ async def hitung_from_deteksi(
         )
 
 
+@router.get("/deteksi-available")
+async def get_deteksi_available(user: dict = Depends(get_current_user)):
+    """Get available detection results for calculation"""
+    try:
+        deteksi = get_collection("deteksi")
+        
+        # Get completed detections
+        cursor = deteksi.find({
+            "status": "completed",
+            "countingData": {"$exists": True}
+        }).sort("createdAt", -1)
+        
+        results = []
+        async for item in cursor:
+            results.append({
+                "id": str(item["_id"]),
+                "filename": item.get("filename", "Unknown"),
+                "status": item.get("status", "completed"),
+                "createdAt": item.get("createdAt"),
+                "countingData": item.get("countingData", {}),
+                "totalKendaraan": (
+                    item.get("countingData", {}).get("laneKiri", {}).get("mobil", 0) +
+                    item.get("countingData", {}).get("laneKiri", {}).get("bus", 0) +
+                    item.get("countingData", {}).get("laneKiri", {}).get("truk", 0) +
+                    item.get("countingData", {}).get("laneKanan", {}).get("mobil", 0) +
+                    item.get("countingData", {}).get("laneKanan", {}).get("bus", 0) +
+                    item.get("countingData", {}).get("laneKanan", {}).get("truk", 0)
+                )
+            })
+        
+        return {
+            "success": True,
+            "data": results
+        }
+        
+    except Exception as e:
+        logger.error(f"Get deteksi available error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "message": str(e)}
+        )
+
+
 @router.get("/reference")
 async def get_referensi(user: dict = Depends(get_current_user)):
     """Get PKJI 2023 reference data"""

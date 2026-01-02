@@ -72,12 +72,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Setup CORS
+# Setup CORS - Allow all Vercel preview deployments
 allowed_origins = [
     "http://localhost:5173",
     "http://localhost:5174", 
     "http://localhost:3000",
     "https://deteksi-ruasjalantoll.vercel.app",
+    "https://deteksi-ruasjalantoll-ehl0of5sj-rfksaputra001-droids-projects.vercel.app",
 ]
 
 # Add configured URLs
@@ -90,29 +91,52 @@ if os.getenv("FRONTEND_URL"):
 logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
 logger.info(f"🔧 NODE_ENV: {os.getenv('NODE_ENV', 'development')}")
 
-# Enhanced CORS configuration for production
+# Custom CORS middleware to handle Vercel preview URLs dynamically
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
+
+class DynamicCORSMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        origin = request.headers.get("origin", "")
+        
+        # Check if origin is allowed (including Vercel preview URLs)
+        is_allowed = (
+            origin in allowed_origins or
+            origin.endswith(".vercel.app") or  # Allow all Vercel deployments
+            origin.startswith("http://localhost")  # Allow all localhost
+        )
+        
+        # Handle preflight OPTIONS request
+        if request.method == "OPTIONS":
+            response = Response(status_code=200)
+            if is_allowed:
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH"
+                response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-Requested-With, Origin"
+            return response
+        
+        # Process the request
+        response = await call_next(request)
+        
+        # Add CORS headers to response
+        if is_allowed:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+        
+        return response
+
+# Add custom CORS middleware
+app.add_middleware(DynamicCORSMiddleware)
+
+# Also add standard CORS middleware as fallback
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,  # Always use specific origins list
+    allow_origins=["*"],  # Allow all origins as fallback
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
-    allow_headers=[
-        "Accept",
-        "Accept-Language", 
-        "Content-Language",
-        "Content-Type",
-        "Authorization",
-        "X-Requested-With",
-        "Origin",
-        "Access-Control-Request-Method",
-        "Access-Control-Request-Headers",
-    ],
-    expose_headers=[
-        "Access-Control-Allow-Origin",
-        "Access-Control-Allow-Credentials", 
-        "Access-Control-Allow-Methods",
-        "Access-Control-Allow-Headers",
-    ],
+    allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Mount Socket.IO

@@ -33,12 +33,24 @@ async def register(request: UserRegisterRequest, req: Request):
                 detail={"status": "error", "message": "Email sudah terdaftar"}
             )
         
+        # Determine user role based on input or name
+        user_role = request.role if hasattr(request, 'role') and request.role else "user"
+        
+        # Smart role detection based on name or email
+        name_lower = request.namaUser.lower()
+        email_lower = request.emailUser.lower()
+        
+        if "surveyor" in name_lower or "surveyor" in email_lower:
+            user_role = "surveyor"
+        elif "admin" in name_lower or "admin" in email_lower:
+            user_role = "admin"
+        
         # Create user
         user_data = {
             "namaUser": request.namaUser,
             "emailUser": request.emailUser.lower(),
             "passwordUser": hash_password(request.passwordUser),
-            "role": "user",
+            "role": user_role,
             "isActive": True,
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
@@ -60,7 +72,7 @@ async def register(request: UserRegisterRequest, req: Request):
         # Generate token
         token = generate_token(user_id)
         
-        logger.info(f"New user registered: {request.emailUser}")
+        logger.info(f"New {user_role} registered: {request.emailUser}")
         
         return {
             "status": "success",
@@ -70,7 +82,7 @@ async def register(request: UserRegisterRequest, req: Request):
                     "id": user_id,
                     "nama": request.namaUser,
                     "email": request.emailUser,
-                    "role": "user"
+                    "role": user_role
                 },
                 "token": token
             }

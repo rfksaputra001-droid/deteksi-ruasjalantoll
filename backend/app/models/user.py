@@ -89,6 +89,7 @@ class UserRegisterRequest(BaseModel):
     namaUser: str = Field(..., min_length=1, max_length=100)
     emailUser: EmailStr
     passwordUser: str = Field(..., min_length=6)
+    role: Optional[str] = Field(default="user", pattern="^(admin|surveyor|user)$")
 
 
 class ChangePasswordRequest(BaseModel):

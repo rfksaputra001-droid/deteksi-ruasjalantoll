@@ -282,25 +282,25 @@ export default function Perhitungan({ onLogout }) {
         </head>
         <body>
           <h1>📊 Hasil Analisis Kinerja Ruas Jalan</h1>
-          <p><strong>Nama Ruas:</strong> ${results.input?.namaRuas || '-'}</p>
-          <p><strong>Tipe Jalan:</strong> ${results.input?.tipeJalan || '-'}</p>
+          <p><strong>Nama Ruas:</strong> ${results.namaRuas || '-'}</p>
+          <p><strong>Tipe Jalan:</strong> ${results.tipeJalan || '-'}</p>
           <p><strong>Tanggal:</strong> ${new Date().toLocaleDateString('id-ID')}</p>
           
           <div class="section">
             <h2>Hasil Perhitungan</h2>
             <table>
               <tr><th>Parameter</th><th>Nilai</th></tr>
-              <tr><td>Kapasitas Jalan (C)</td><td>${results.hasil?.kapasitas} smp/jam</td></tr>
-              <tr><td>Volume Lalu Lintas (Q)</td><td>${results.hasil?.volume} smp/jam</td></tr>
-              <tr><td>Derajat Kejenuhan (DJ)</td><td>${results.hasil?.derajatJenuh}</td></tr>
-              <tr><td>Level of Service (LOS)</td><td class="result">${results.hasil?.los}</td></tr>
-              <tr><td>Kondisi</td><td>${results.hasil?.kondisi}</td></tr>
+              <tr><td>Kapasitas Jalan (C)</td><td>${results.kapasitas?.kapasitas} smp/jam</td></tr>
+              <tr><td>Volume Lalu Lintas (Q)</td><td>${results.volume?.volumeSMP} smp/jam</td></tr>
+              <tr><td>Derajat Kejenuhan (DJ)</td><td>${results.DJ}</td></tr>
+              <tr><td>Level of Service (LOS)</td><td class="result">${results.LOS}</td></tr>
+              <tr><td>Kondisi</td><td>${results.losDescription}</td></tr>
             </table>
           </div>
           
           <div class="section">
-            <h2>Keterangan LOS ${results.hasil?.los}</h2>
-            <p>${results.hasil?.losDescription}</p>
+            <h2>Keterangan LOS ${results.LOS}</h2>
+            <p>${results.losDescription}</p>
           </div>
           
           <p style="margin-top: 30px; font-size: 12px; color: #666;">
@@ -780,15 +780,15 @@ export default function Perhitungan({ onLogout }) {
                 <div className="space-y-3 bg-gradient-to-br from-gray-50 to-blue-50 p-4 rounded-lg border border-blue-200">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-700 font-semibold">Kapasitas (C):</span>
-                    <span className="text-gray-900 font-bold text-lg">{results.hasil?.kapasitas} smp/jam</span>
+                    <span className="text-gray-900 font-bold text-lg">{results.kapasitas?.kapasitas} smp/jam</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-700 font-semibold">Volume (Q):</span>
-                    <span className="text-gray-900 font-bold text-lg">{results.hasil?.volume} smp/jam</span>
+                    <span className="text-gray-900 font-bold text-lg">{results.volume?.volumeSMP} smp/jam</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-700 font-semibold">Derajat Jenuh (DJ):</span>
-                    <span className="text-orange-600 font-bold text-lg">{results.hasil?.derajatJenuh}</span>
+                    <span className="text-orange-600 font-bold text-lg">{results.DJ}</span>
                   </div>
                 </div>
               </div>
@@ -821,7 +821,7 @@ export default function Perhitungan({ onLogout }) {
 
       {/* Results Card */}
       {showResults && results && (
-        <Card className={`border-l-4 ${losColors[results.hasil?.los]?.border || 'border-gray-400'} bg-gradient-to-r from-white to-gray-50`}>
+        <Card className={`border-l-4 ${losColors[results.LOS]?.border || 'border-gray-400'} bg-gradient-to-r from-white to-gray-50`}>
           <div className="flex items-center gap-3 mb-6">
             <span className="text-3xl">📊</span>
             <h3 className="text-xl font-bold text-gray-900">Hasil Analisis Kinerja Ruas Jalan</h3>
@@ -830,30 +830,30 @@ export default function Perhitungan({ onLogout }) {
           <div className="grid grid-cols-4 gap-4 mb-6">
             <div className="bg-white rounded-lg p-4 text-center shadow-sm">
               <p className="text-sm text-gray-600 mb-2">Level of Service</p>
-              <p className={`text-4xl font-bold rounded-lg py-2 ${losColors[results.hasil?.los]?.bg} ${losColors[results.hasil?.los]?.text}`}>
-                {results.hasil?.los}
+              <p className={`text-4xl font-bold rounded-lg py-2 ${losColors[results.LOS]?.bg} ${losColors[results.LOS]?.text}`}>
+                {results.LOS}
               </p>
-              <p className="text-xs text-gray-500 mt-2">{results.hasil?.kondisi}</p>
+              <p className="text-xs text-gray-500 mt-2">{results.losDescription}</p>
             </div>
             <div className="bg-white rounded-lg p-4 text-center shadow-sm">
               <p className="text-sm text-gray-600 mb-2">Derajat Kejenuhan (DJ)</p>
-              <p className="text-3xl font-bold text-orange-600">{results.hasil?.derajatJenuh}</p>
+              <p className="text-3xl font-bold text-orange-600">{results.DJ}</p>
             </div>
             <div className="bg-white rounded-lg p-4 text-center shadow-sm">
               <p className="text-sm text-gray-600 mb-2">Volume (Q)</p>
-              <p className="text-2xl font-bold text-gray-900">{results.hasil?.volume}</p>
+              <p className="text-2xl font-bold text-gray-900">{results.volume?.volumeSMP}</p>
               <p className="text-xs text-gray-500">smp/jam</p>
             </div>
             <div className="bg-white rounded-lg p-4 text-center shadow-sm">
               <p className="text-sm text-gray-600 mb-2">Kapasitas (C)</p>
-              <p className="text-2xl font-bold text-gray-900">{results.hasil?.kapasitas}</p>
+              <p className="text-2xl font-bold text-gray-900">{results.kapasitas?.kapasitas}</p>
               <p className="text-xs text-gray-500">smp/jam</p>
             </div>
           </div>
 
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h4 className="font-semibold text-blue-900 mb-2">📝 Keterangan LOS {results.hasil?.los}</h4>
-            <p className="text-blue-800">{results.hasil?.losDescription}</p>
+            <h4 className="font-semibold text-blue-900 mb-2">📝 Keterangan LOS {results.LOS}</h4>
+            <p className="text-blue-800">{results.losDescription}</p>
           </div>
 
           <div className="flex gap-4">

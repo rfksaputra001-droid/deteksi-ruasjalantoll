@@ -319,7 +319,7 @@ async def hitung_from_deteksi(
         )
 
 
-@router.get("/referensi")
+@router.get("/reference")
 async def get_referensi(user: dict = Depends(get_current_user)):
     """Get PKJI 2023 reference data"""
     try:

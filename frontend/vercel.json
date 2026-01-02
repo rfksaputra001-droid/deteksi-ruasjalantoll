@@ -1,12 +1,12 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://deteksi-ruasjalantoll.onrender.com/api/$1"
+      "source": "/api/(.*)",
+      "destination": "https://deteksi-ruasjalantoll.onrender.com/api/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/((?!api|_next|_static|favicon.ico|.*\\.).*)(.*)$",
+      "destination": "/index.html"
     }
   ],
   "headers": [

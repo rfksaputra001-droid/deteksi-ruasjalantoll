@@ -99,8 +99,8 @@ async def get_dashboard_stats(
             traffic_data.append({
                 "date": item.get("createdAt"),
                 "namaRuas": metrics.get("namaRuas", ""),
-                "LOS": item.get("LOS", ""),
-                "DJ": item.get("DJ", 0),
+                "los": item.get("LOS", ""),  # lowercase for frontend
+                "dj": item.get("DJ", 0),     # lowercase for frontend
                 "totalKendaraan": item.get("totalKendaraan", 0),
                 "waktuObservasi": metrics.get("waktuObservasi", "")
             })
@@ -111,11 +111,9 @@ async def get_dashboard_stats(
                 "totalTrafficCounter": total_traffic_counter,
                 "losDistribution": los_distribution,
                 "losPercentages": los_percentages,
-                "highestLOS": {
-                    "los": highest_los,
-                    "location": highest_los_location,
-                    "time": highest_los_time
-                },
+                "highestLOS": highest_los or "-",           # direct value
+                "highestLOSLocation": highest_los_location or "-",
+                "highestLOSTime": highest_los_time or "-",
                 "trafficData": traffic_data,
                 "totalPerhitungan": len(perhitungan_list),
                 "totalDeteksi": len(deteksi_list),

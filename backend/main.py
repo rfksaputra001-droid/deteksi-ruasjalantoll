@@ -75,7 +75,7 @@ app = FastAPI(
 # Setup CORS
 allowed_origins = [
     "http://localhost:5173",
-    "http://localhost:5174",
+    "http://localhost:5174", 
     "http://localhost:3000",
     "https://deteksi-ruasjalantoll.vercel.app",
 ]
@@ -86,12 +86,33 @@ if os.getenv("CLIENT_URL"):
 if os.getenv("FRONTEND_URL"):
     allowed_origins.append(os.getenv("FRONTEND_URL"))
 
+# Log CORS configuration for debugging
+logger.info(f"🌐 CORS allowed origins: {allowed_origins}")
+logger.info(f"🔧 NODE_ENV: {os.getenv('NODE_ENV', 'development')}")
+
+# Enhanced CORS configuration for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins if os.getenv("NODE_ENV") == "production" else ["*"],
+    allow_origins=allowed_origins,  # Always use specific origins list
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language", 
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-Requested-With",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers",
+    ],
+    expose_headers=[
+        "Access-Control-Allow-Origin",
+        "Access-Control-Allow-Credentials", 
+        "Access-Control-Allow-Methods",
+        "Access-Control-Allow-Headers",
+    ],
 )
 
 # Mount Socket.IO

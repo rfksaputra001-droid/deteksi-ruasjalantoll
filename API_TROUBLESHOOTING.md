@@ -35,7 +35,23 @@ async def root():
     }
 ```
 
-### 4. Socket.IO WSS Connection Failed
+### 4. CORS Header Missing - Production Deployment  
+**Problem**: 'Access-Control-Allow-Origin' missing on Render deployment
+**Solution**: Enhanced CORS configuration with explicit headers and origins
+
+**CORS Issues Fixed**:
+```python
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,  # Always use specific origins
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"],
+    allow_headers=["Accept", "Content-Type", "Authorization", ...],
+    expose_headers=["Access-Control-Allow-Origin", ...],
+)
+```
+
+### 5. Socket.IO WSS Connection Failed
 **Problem**: Frontend trying to connect to WS/WSS when should use HTTP/HTTPS
 **Solution**: Let Socket.IO client handle protocol conversion automatically
 
@@ -73,8 +89,12 @@ io(SOCKET_URL, {
 - ✅ Socket.IO connects via WSS on HTTPS (Render)
 - ✅ Real-time detection progress works
 - ✅ All API endpoints respond correctly
+- ✅ CORS headers properly configured for production
+- ✅ Root endpoint resolves 404 health check issues
 
 ## Deployment Status
-- Commit: `50d92b7` - All fixes applied
-- Status: Auto-deployed to Render
-- Frontend: Should connect properly to backend API + Socket.IO
+- **Latest Commit**: `ba36763` - Root endpoint + CORS fixes applied
+- **Status**: Auto-deployed to Render  
+- **CORS**: Enhanced configuration with explicit headers
+- **Frontend**: Should connect properly to backend API + Socket.IO
+- **Health Check**: Root endpoint added for Render monitoring

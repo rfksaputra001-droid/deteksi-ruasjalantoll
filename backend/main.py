@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config.database import connect_db, close_db
 from app.config.cloudinary import test_cloudinary_connection
-from app.routes import auth, admin, deteksi, histori, dashboard, perhitungan
+from app.routes import auth, admin, deteksi, histori, dashboard, perhitungan, dashboard_backend
 from app.utils.logger import logger
 from app.core.socket import socket_manager
 
@@ -146,6 +146,7 @@ try:
     app.include_router(histori.router, prefix="/api/histori", tags=["History"])
     app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
     app.include_router(perhitungan.router, prefix="/api/perhitungan", tags=["Calculation"])
+    app.include_router(dashboard_backend.router, tags=["Backend Info"])
     logger.info("✅ All API routes registered successfully")
 except Exception as e:
     logger.error(f"❌ Error registering routes: {e}")

@@ -52,15 +52,23 @@ export function DeteksiProvider({ children }) {
       const response = await apiRequest(`${API_ENDPOINTS.DETECTION_LIST}?page=${currentPageRef.current}&limit=${itemsPerPage}`)
       
       if (response.success) {
-        setDetectionData(response.data || [])
-        setTotalPages(response.pagination?.total_pages || 1)
-        setTotalItems(response.pagination?.total_items || 0)
+        const processedData = response.data.map((item, index) => ({
+          id: index + 1 + (currentPageRef.current - 1) * itemsPerPage,
+          ...item
+        }))
+        
+        setDetectionData(processedData)
+        
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages || 1)
+          setTotalItems(response.pagination.totalItems || 0)
+        }
       } else {
-        throw new Error(response.message || 'Failed to fetch detections')
+        throw new Error(response.message || 'Failed to fetch detection data')
       }
-    } catch (err) {
-      console.error('Error fetching detections:', err)
-      setError(`Gagal memuat data deteksi: ${err.message}`)
+    } catch (error) {
+      console.error('Error fetching detections:', error)
+      setError(`Gagal memuat data deteksi: ${error.message}`)
       setDetectionData([])
     } finally {
       setLoading(false)
@@ -122,7 +130,7 @@ export function DeteksiProvider({ children }) {
           return newSet
         })
         
-        // Clear progress
+        // Clear real-time progress if it's for current tracking
         if (data.trackingId === currentTrackingId) {
           setRealTimeProgress(null)
           setCurrentTrackingId(null)
@@ -145,140 +153,102 @@ export function DeteksiProvider({ children }) {
     socketRef.current = socket
 
     return () => {
-      console.log('🔌 Cleaning up Socket.IO connection')
       socket.disconnect()
     }
-  }, []) 
+  }, [fetchDetections, currentTrackingId])
 
-  // Join detection room when tracking ID changes
+  // Initialize data on mount
   useEffect(() => {
-    if (currentTrackingId && socketRef.current) {
-      console.log('📺 Joining detection room:', currentTrackingId)
-      socketRef.current.emit('join_detection', { tracking_id: currentTrackingId })
-      
-      return () => {
-        if (socketRef.current) {
-          console.log('📺 Leaving detection room:', currentTrackingId)
-          socketRef.current.emit('leave_detection', { tracking_id: currentTrackingId })
-        }
-      }
-    }
-  }, [currentTrackingId])
+    fetchDetections()
+  }, [fetchDetections])
 
-  // Upload video function
-  const uploadVideo = async (file) => {
-    if (uploading) {
-      console.warn('Upload already in progress')
-      return
+  const uploadVideo = async (file, progressCallback) => {
+    if (!file) {
+      throw new Error('File tidak valid')
     }
 
     try {
       setUploading(true)
-      setUploadProgress('Preparing upload...')
+      setUploadProgress('')
       setError('')
-      setSuccessMessage('')
-
-      // Validate file
-      if (!file.type.startsWith('video/')) {
-        throw new Error('File harus berupa video')
-      }
-
-      if (file.size > 50 * 1024 * 1024) { // 50MB limit
-        throw new Error('File terlalu besar (maksimal 50MB)')
-      }
-
-      setUploadProgress('Uploading video...')
-
+      
       const formData = new FormData()
-      formData.append('file', file)
-
-      const response = await apiRequest(API_ENDPOINTS.UPLOAD_VIDEO, {
+      formData.append('video', file)
+      
+      const response = await fetch(API_ENDPOINTS.UPLOAD_VIDEO, {
         method: 'POST',
-        body: formData,
         headers: {
-          // Remove Content-Type to let browser set it with boundary for FormData
-        }
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
       })
 
-      if (response.success && response.data) {
-        const { tracking_id, filename } = response.data
-        
-        setUploadProgress('Upload successful! Processing video...')
-        setSuccessMessage('Video berhasil diunggah dan sedang diproses')
-        
-        // Start tracking this detection
-        setCurrentTrackingId(tracking_id)
-        setProcessingDetections(prev => new Set([...prev, tracking_id]))
-        
-        // Initialize progress
-        setRealTimeProgress({
-          trackingId: tracking_id,
-          stage: 'starting',
-          message: 'Memulai deteksi video...',
-          progress: 0
-        })
-        
-        setTimeout(() => {
-          setUploadProgress('')
-        }, 3000)
-        
-        return { tracking_id, filename }
-      } else {
-        throw new Error(response.message || 'Upload failed')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed')
       }
 
-    } catch (err) {
-      console.error('Upload error:', err)
-      setError(`Gagal mengunggah video: ${err.message}`)
-      setUploadProgress('')
-      throw err
+      if (data.success && data.data) {
+        const trackingId = data.data.trackingId
+        
+        // Add to processing set
+        setProcessingDetections(prev => new Set([...prev, trackingId]))
+        setCurrentTrackingId(trackingId)
+        
+        // Join Socket.IO room for this detection
+        if (socketRef.current?.connected) {
+          socketRef.current.emit('join-detection-room', { trackingId })
+        }
+        
+        setSuccessMessage('Video berhasil diupload! Deteksi dimulai...')
+        
+        // Refresh data
+        await fetchDetections()
+        
+        return data.data
+      } else {
+        throw new Error(data.message || 'Upload response tidak valid')
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      setError(`Upload gagal: ${error.message}`)
+      throw error
     } finally {
       setUploading(false)
     }
   }
 
-  // Delete detection function
-  const deleteDetection = async (detectionId) => {
+  const deleteDetection = async (id) => {
     try {
       setLoading(true)
-      const response = await apiRequest(API_ENDPOINTS.DELETE_DETECTION(detectionId), {
+      setError('')
+      
+      const response = await apiRequest(API_ENDPOINTS.DETECTION_DELETE(id), {
         method: 'DELETE'
       })
       
       if (response.success) {
-        setSuccessMessage('Data deteksi berhasil dihapus')
-        await fetchDetections() // Refresh the list
+        setSuccessMessage('Data berhasil dihapus')
+        await fetchDetections()
       } else {
         throw new Error(response.message || 'Gagal menghapus data')
       }
-    } catch (err) {
-      console.error('Delete error:', err)
-      setError(`Gagal menghapus data: ${err.message}`)
+    } catch (error) {
+      console.error('Delete error:', error)
+      setError(`Gagal menghapus: ${error.message}`)
+      throw error
     } finally {
       setLoading(false)
     }
   }
 
-  // Navigation functions
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
-    }
-  }
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page)
+    // fetchDetections will be called automatically via useEffect
+  }, [])
 
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
-    }
-  }
-
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page)
-    }
-  }
-
-  // Fetch detections when page changes
+  // Update fetch when page changes
   useEffect(() => {
     fetchDetections()
   }, [currentPage, fetchDetections])
@@ -301,19 +271,15 @@ export function DeteksiProvider({ children }) {
     currentTrackingId,
     
     // Actions
+    fetchDetections,
     uploadVideo,
     deleteDetection,
-    fetchDetections,
+    handlePageChange,
     setVideoPreview,
     setSelectedDetection,
     setError,
     setSuccessMessage,
-    goToNextPage,
-    goToPrevPage,
-    goToPage,
-    
-    // Pagination
-    itemsPerPage
+    setUploadProgress
   }
 
   return (
@@ -327,7 +293,7 @@ DeteksiProvider.propTypes = {
   children: PropTypes.node.isRequired,
 }
 
-export const useDeteksi = () => {
+export function useDeteksi() {
   const context = useContext(DeteksiContext)
   if (context === null) {
     throw new Error('useDeteksi must be used within a DeteksiProvider')

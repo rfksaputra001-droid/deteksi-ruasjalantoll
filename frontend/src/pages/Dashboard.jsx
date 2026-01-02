@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-import { API_ENDPOINTS, apiRequest } from '../utils/api'
+import { API_ENDPOINTS, apiRequest } from '../config/api'
 
 const imgImage = 'https://www.figma.com/api/mcp/asset/b95c3451-d796-4d94-a410-d003a2bb8d9f'
 const imgImage1 = 'https://www.figma.com/api/mcp/asset/7d8fb77f-5356-493b-9748-c3846bf7c228'

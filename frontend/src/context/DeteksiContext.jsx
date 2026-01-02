@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
 import PropTypes from 'prop-types'
-import { socketClient } from '../utils/socketClient'
-import { API_ENDPOINTS, apiRequest } from '../utils/api'
+import { io } from 'socket.io-client'
+import { SOCKET_URL, API_ENDPOINTS, apiRequest } from '../config/api'
 
 const DeteksiContext = createContext(null)
 
@@ -67,45 +67,30 @@ export function DeteksiProvider({ children }) {
     }
   }, [])
 
-  // Setup Socket.IO connection using socketClient
+  // Setup Socket.IO connection - only once
   useEffect(() => {
-    console.log('🔌 Initializing Socket.IO connection...')
-    
-    // Connect to Socket.IO server
-    const socket = socketClient.connect()
-    
-    if (!socket) {
-      console.warn('⚠️ Socket.IO connection failed - no valid token')
-      return
-    }
-
-    // Register event handlers using socketClient
-    socketClient.on('connected', (data) => {
-      console.log('✅ Socket.IO connected via socketClient:', data)
-    })
+    const socket = io(SOCKET_URL, {
+      transports: ['websocket', 'polling'],
+      upgrade: true,
+      rememberUpgrade: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      forceNew: false,
+      path: '/socket.io/'
     })
 
-    socket.on('disconnect', (reason) => {
-      console.log('❌ Socket.IO disconnected:', reason)
-      if (reason === 'io server disconnect') {
-        // Server disconnected, try to reconnect
-        socket.connect()
-      }
+    socket.on('connect', () => {
+      console.log('🔌 Socket.IO connected (Global):', socket.id)
+    })
+
+    socket.on('disconnect', () => {
+      console.log('❌ Socket.IO disconnected (Global)')
     })
 
     socket.on('connect_error', (err) => {
-      console.error('🚫 Socket.IO connection error:', err.message)
-      console.error('Error details:', err)
-      
-      // Try to reconnect with different transport if WebSocket fails
-      if (err.message.includes('websocket error')) {
-        console.log('🔄 Retrying with polling transport only...')
-        socket.io.opts.transports = ['polling']
-      }
-    })
-    
-    socket.on('connected', (data) => {
-      console.log('🎉 Server confirmed connection:', data)
+      console.error('Socket.IO connection error:', err.message)
     })
 
     // Global listener for detection status changes

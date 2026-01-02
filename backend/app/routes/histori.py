@@ -29,6 +29,19 @@ async def get_history(
         
         if actionType:
             query["actionType"] = actionType
+
+
+# Add alias route for /list compatibility
+@router.get("/list")
+async def get_history_list(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    actionType: Optional[str] = None,
+    user: dict = Depends(get_current_user)
+):
+    """Get user's activity history (alias for /)""" 
+    return await get_history(page, limit, actionType, user)
+            query["actionType"] = actionType
         
         # Get total count
         total = await histori.count_documents(query)

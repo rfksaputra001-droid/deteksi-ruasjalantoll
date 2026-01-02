@@ -74,9 +74,15 @@ export function DeteksiProvider({ children }) {
   useEffect(() => {
     const socket = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
+      upgrade: true,
+      rememberUpgrade: true,
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      timeout: 20000,
+      forceNew: false,
+      // Add path for Socket.IO endpoint
+      path: '/socket.io/'
     })
 
     socket.on('connect', () => {

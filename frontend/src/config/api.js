@@ -2,8 +2,11 @@
 // Always use the full backend URL from environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
-// Socket.IO URL (same as API base URL)  
-export const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// Socket.IO URL - use same protocol as API base URL
+export const SOCKET_URL = (() => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  return baseUrl; // Socket.IO client will handle the protocol conversion
+})();
 
 console.log('🔧 API Config:', { 
   API_BASE_URL, 

@@ -97,3 +97,13 @@ async def delete_resource(public_id: str, resource_type: str = "video"):
     except Exception as e:
         logger.error(f"❌ Cloudinary delete failed: {str(e)}")
         return False
+
+
+async def upload_to_cloudinary(file_path: str, folder: str = "deteksi"):
+    """Upload file to Cloudinary - alias for compatibility"""
+    try:
+        result = await upload_file(file_path, folder=folder, resource_type="video")
+        return result.get("url")
+    except Exception as e:
+        logger.error(f"❌ upload_to_cloudinary failed: {str(e)}")
+        return None

@@ -238,13 +238,19 @@ export default function ManajemenUser({ onLogout }) {
     { 
       key: 'role', 
       label: 'Role',
-      render: (role) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-          role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-        }`}>
-          {role === 'admin' ? '👑 Admin' : '👤 User'}
-        </span>
-      )
+      render: (role) => {
+        const roleConfig = {
+          'admin': { bg: 'bg-purple-100', text: 'text-purple-800', icon: '👑', label: 'Admin' },
+          'surveyor': { bg: 'bg-green-100', text: 'text-green-800', icon: '🔍', label: 'Surveyor' },
+          'user': { bg: 'bg-blue-100', text: 'text-blue-800', icon: '👤', label: 'User' }
+        };
+        const config = roleConfig[role] || roleConfig['user'];
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text}`}>
+            {config.icon} {config.label}
+          </span>
+        );
+      }
     },
     { 
       key: 'isActive', 

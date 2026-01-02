@@ -198,7 +198,8 @@ export function DeteksiProvider({ children }) {
         
         // Join Socket.IO room for this detection
         if (socketRef.current?.connected) {
-          socketRef.current.emit('join-detection-room', { trackingId })
+          console.log('🎯 Joining detection room:', trackingId)
+          socketRef.current.emit('join_detection', { tracking_id: trackingId })
         }
         
         setSuccessMessage('Video berhasil diupload! Deteksi dimulai...')

@@ -26,11 +26,24 @@ async def upload_video(
 ):
     """Upload video for detection processing"""
     try:
-        # Validate file
-        if not file.content_type.startswith('video/'):
+        logger.info(f"📤 Upload request - File: {file.filename}, Content-Type: {file.content_type}, User: {user.get('email', 'unknown')}")
+        
+        # Validate file extension and content type
+        if file.filename:
+            file_ext = file.filename.split('.')[-1].lower()
+            allowed_extensions = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'flv']
+            
+            # Check by extension or content type
+            if not (file.content_type and file.content_type.startswith('video/')) and file_ext not in allowed_extensions:
+                logger.warning(f"❌ Invalid file type: {file.content_type}, extension: {file_ext}")
+                raise HTTPException(
+                    status_code=400,
+                    detail={"success": False, "message": f"File harus berupa video. Format yang didukung: {', '.join(allowed_extensions)}"}
+                )
+        else:
             raise HTTPException(
                 status_code=400,
-                detail={"success": False, "message": "File harus berupa video"}
+                detail={"success": False, "message": "Nama file tidak valid"}
             )
         
         # Check file size (50MB limit for free tier)

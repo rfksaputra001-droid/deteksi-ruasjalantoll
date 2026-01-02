@@ -49,6 +49,8 @@ class VideoDetectionService:
         Complete video processing pipeline with real-time progress
         """
         try:
+            logger.info(f"🎬 Starting video processing for {tracking_id}: {filename}")
+            
             # Initialize model
             if not await self.initialize_model():
                 raise Exception("Failed to initialize YOLO model")
@@ -57,13 +59,15 @@ class VideoDetectionService:
             await socket_manager.emit_progress(tracking_id, {
                 "stage": "starting",
                 "message": "Memulai deteksi video...",
-                "progress": 0
+                "progress": 0,
+                "trackingId": tracking_id
             })
             
             # Step 1: Video validation and info
+            logger.info(f"📹 Opening video file: {video_file_path}")
             cap = cv2.VideoCapture(video_file_path)
             if not cap.isOpened():
-                raise Exception("Tidak dapat membuka file video")
+                raise Exception(f"Tidak dapat membuka file video: {video_file_path}")
             
             # Get video info
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -72,10 +76,13 @@ class VideoDetectionService:
             height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
             duration = total_frames / fps if fps > 0 else 0
             
+            logger.info(f"📊 Video info: {total_frames} frames, {fps:.1f} FPS, {width}x{height}")
+            
             await socket_manager.emit_progress(tracking_id, {
                 "stage": "analyzing",
                 "message": f"Video info: {total_frames} frames, {fps:.1f} FPS",
                 "progress": 10,
+                "trackingId": tracking_id,
                 "video_info": {
                     "total_frames": total_frames,
                     "fps": fps,
@@ -164,20 +171,27 @@ class VideoDetectionService:
             cap.release()
             out.release()
             
-            # Step 3: Upload results to Cloudinary
+            # Step 3: Upload results to Cloudinary (optional)
             await socket_manager.emit_progress(tracking_id, {
                 "stage": "uploading", 
                 "message": "Mengunggah video hasil deteksi...",
-                "progress": 90
+                "progress": 90,
+                "trackingId": tracking_id
             })
             
-            # Upload processed video
+            # Upload processed video (with fallback)
             video_url = None
             try:
                 video_url = await upload_to_cloudinary(output_path, f"deteksi/{tracking_id}")
-                os.remove(output_path)  # Clean up local file
+                logger.info(f"✅ Video uploaded to Cloudinary: {video_url}")
+                # Clean up local file after successful upload
+                if os.path.exists(output_path):
+                    os.remove(output_path)
             except Exception as e:
-                logger.warning(f"Failed to upload video: {e}")
+                logger.warning(f"⚠️ Failed to upload video to Cloudinary: {e}")
+                # Keep local file as fallback
+                logger.info(f"💾 Video saved locally: {output_path}")
+                video_url = f"local://{output_path}"  # Fallback URL
             
             # Step 4: Prepare final results
             final_results = {
@@ -222,17 +236,20 @@ class VideoDetectionService:
                 "stage": "completed",
                 "message": "Deteksi selesai!",
                 "progress": 100,
+                "trackingId": tracking_id,
                 "results": final_results
             })
             
+            logger.info(f"✅ Video processing completed for {tracking_id}")
             return final_results
             
         except Exception as e:
-            logger.error(f"Video processing error for {tracking_id}: {e}")
+            logger.error(f"❌ Video processing error for {tracking_id}: {e}")
             await socket_manager.emit_progress(tracking_id, {
                 "stage": "error",
                 "message": f"Error: {str(e)}",
                 "progress": 0,
+                "trackingId": tracking_id,
                 "error": str(e)
             })
             raise

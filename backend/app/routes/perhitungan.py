@@ -319,7 +319,7 @@ async def hitung_from_deteksi(
         )
 
 
-@router.get("/deteksi-available")
+@router.get("/available-detections")
 async def get_deteksi_available(user: dict = Depends(get_current_user)):
     """Get available detection results for calculation"""
     try:

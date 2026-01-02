@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import Card from '../components/UI/Card'
 import Table from '../components/UI/Table'
+import VideoProgressMonitor from '../components/UI/VideoProgressMonitor'
 import { API_ENDPOINTS } from '../config/api'
 import { useDeteksi } from '../context/DeteksiContext'
 
@@ -32,6 +33,8 @@ const IconCsv = () => (
 )
 
 export default function Deteksi({ onLogout }) {
+  const [showProgressMonitor, setShowProgressMonitor] = useState(false)
+  
   const {
     detectionData,
     videoPreview,
@@ -562,6 +565,12 @@ export default function Deteksi({ onLogout }) {
           )}
         </div>
       </Card>
+
+      {/* Video Progress Monitor Modal */}
+      <VideoProgressMonitor
+        isOpen={showProgressMonitor}
+        onClose={() => setShowProgressMonitor(false)}
+      />
     </div>
   )
 }
@@ -569,3 +578,6 @@ export default function Deteksi({ onLogout }) {
 Deteksi.propTypes = {
   onLogout: PropTypes.func.isRequired,
 }
+
+// Add progress monitor button after upload section
+

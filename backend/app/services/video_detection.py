@@ -47,15 +47,44 @@ class VideoDetectionService:
                 break
         
     async def initialize_model(self):
-        """Initialize YOLO model with error handling"""
+        """Initialize YOLO model with error handling and memory optimization"""
         try:
             if self.model is None:
                 if self.custom_model_path:
                     logger.info(f"🚀 Loading CUSTOM YOLO model: {self.custom_model_path}")
                 else:
                     logger.info(f"🤖 Loading default YOLO model: {self.model_path}")
+                
+                # Load model with memory optimization for Render free tier
+                import gc
+                import torch
+                
+                # Clear memory before loading
+                gc.collect()
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                
+                # Load model with optimized settings
                 self.model = YOLO(self.model_path)
-                logger.info("✅ YOLO model loaded successfully")
+                
+                # Configure for memory efficiency
+                self.model.model.float()  # Use float32 instead of float16 for stability
+                
+                # Reduce model memory footprint on CPU
+                if not torch.cuda.is_available():
+                    # Force CPU mode and optimize
+                    self.model.model.cpu()
+                    
+                # Test inference to warm up model
+                import numpy as np
+                test_frame = np.zeros((640, 640, 3), dtype=np.uint8)
+                _ = self.model(test_frame, verbose=False)
+                
+                logger.info("✅ YOLO model loaded and warmed up successfully")
+                logger.info(f"📊 Model classes: {len(self.model.names)} - {list(self.model.names.values())[:5]}...")
+                
+                # Force garbage collection after loading
+                gc.collect()
             return True
         except Exception as e:
             logger.error(f"❌ Failed to load YOLO model: {e}")
@@ -142,15 +171,31 @@ class VideoDetectionService:
                 }
             })
             
-            # Step 2: Frame-by-frame detection
+            # Step 2: Frame-by-frame detection with memory optimization
             detections = []
             frame_count = 0
             vehicle_counts = {"mobil": 0, "motor": 0, "truk": 0, "bus": 0}
             
             # Create output video writer
+            os.makedirs("/tmp/temp", exist_ok=True)
             output_path = f"/tmp/temp/detected_{tracking_id}.mp4"
+            
+            # Use more efficient codec for free tier
             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+            # Reduce resolution if frame is too large to save memory
+            if width > 1280 or height > 720:
+                scale = min(1280/width, 720/height)
+                new_width = int(width * scale)
+                new_height = int(height * scale)
+                logger.info(f"📏 Scaling down video from {width}x{height} to {new_width}x{new_height} for memory efficiency")
+            else:
+                new_width, new_height = width, height
+                
+            out = cv2.VideoWriter(output_path, fourcc, fps, (new_width, new_height))
+            
+            # Process frames in batches to manage memory
+            batch_size = 5  # Process 5 frames at a time to manage memory
+            frames_processed = 0
             
             while True:
                 ret, frame = cap.read()

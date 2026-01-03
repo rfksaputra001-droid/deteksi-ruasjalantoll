@@ -7,6 +7,7 @@ Converted from Node.js to Python for seamless YOLO integration
 
 import os
 import sys
+import asyncio
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -23,6 +24,7 @@ from app.config.cloudinary import test_cloudinary_connection
 from app.routes import auth, admin, deteksi, histori, dashboard, perhitungan, dashboard_backend, status_dashboard
 from app.utils.logger import logger
 from app.core.socket import socket_manager
+from app.services.keep_alive import keep_alive_service
 
 # Lifespan handler for startup/shutdown
 @asynccontextmanager
@@ -50,6 +52,11 @@ async def lifespan(app: FastAPI):
             # YOLO will auto-download on first use
         
         logger.info("✅ Server startup complete!")
+        
+        # Start keep-alive service for Render free tier
+        if os.getenv("RENDER") or "onrender.com" in os.getenv("RENDER_SERVICE_URL", ""):
+            logger.info("🏓 Starting keep-alive service for Render free tier")
+            asyncio.create_task(keep_alive_service.start())
         
     except Exception as e:
         logger.error(f"❌ Startup error: {e}")
@@ -163,8 +170,56 @@ async def root():
             "status": "/backend-status-check",
             "cors_test": "/cors-test"
         },
-        "timestamp": datetime.datetime.utcnow().isoformat()
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+        "memory_usage": f"{get_memory_usage():.1f}MB"
     }
+
+@app.get("/health")
+async def health_check():
+    """Comprehensive health check for monitoring"""
+    import datetime
+    
+    try:
+        # Check database connection
+        from app.config.database import get_collection
+        users = get_collection("users")
+        db_status = "✅ Connected"
+        try:
+            await users.find_one({}, {"_id": 1})
+        except:
+            db_status = "❌ Connection Failed"
+        
+        # Check YOLO model status
+        from app.services.video_detection import video_detection_service
+        model_status = "✅ Loaded" if video_detection_service.model else "❌ Not Loaded"
+        
+        # System resources
+        memory_mb = get_memory_usage()
+        
+        return {
+            "status": "healthy",
+            "timestamp": datetime.datetime.utcnow().isoformat(),
+            "database": db_status,
+            "yolo_model": model_status,
+            "memory_mb": round(memory_mb, 1),
+            "active_processing": len(video_detection_service.processing_tasks),
+            "render_tier": "free"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.datetime.utcnow().isoformat()
+        }
+
+def get_memory_usage():
+    """Get current memory usage in MB"""
+    try:
+        import psutil
+        return psutil.virtual_memory().used / 1024 / 1024
+    except:
+        return 0
 
 # CORS test endpoint
 @app.get("/cors-test")

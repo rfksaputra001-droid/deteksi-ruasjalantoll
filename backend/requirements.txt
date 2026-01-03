@@ -19,6 +19,7 @@ motor==3.3.2
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 psutil==5.9.6
+aiohttp==3.9.1
 
 # === Configuration ===
 python-dotenv==1.0.0

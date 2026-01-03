@@ -24,7 +24,14 @@ from app.config.cloudinary import test_cloudinary_connection
 from app.routes import auth, admin, deteksi, histori, dashboard, perhitungan, dashboard_backend, status_dashboard
 from app.utils.logger import logger
 from app.core.socket import socket_manager
-from app.services.keep_alive import keep_alive_service
+
+# Optional keep-alive service for Render free tier
+try:
+    from app.services.keep_alive import keep_alive_service
+    KEEP_ALIVE_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Keep-alive service not available: {e}")
+    KEEP_ALIVE_AVAILABLE = False
 
 # Lifespan handler for startup/shutdown
 @asynccontextmanager
@@ -54,9 +61,11 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Server startup complete!")
         
         # Start keep-alive service for Render free tier
-        if os.getenv("RENDER") or "onrender.com" in os.getenv("RENDER_SERVICE_URL", ""):
+        if KEEP_ALIVE_AVAILABLE and (os.getenv("RENDER") or "onrender.com" in os.getenv("RENDER_SERVICE_URL", "")):
             logger.info("🏓 Starting keep-alive service for Render free tier")
             asyncio.create_task(keep_alive_service.start())
+        elif not KEEP_ALIVE_AVAILABLE:
+            logger.info("⚠️  Keep-alive service not available (missing aiohttp), will use basic health endpoint")
         
     except Exception as e:
         logger.error(f"❌ Startup error: {e}")

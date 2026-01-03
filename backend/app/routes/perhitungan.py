@@ -185,14 +185,18 @@ async def hitung_manual(request: ManualCalculationRequest, user: dict = Depends(
         logger.info(f"Manual calculation saved: {result.inserted_id}")
         
         # Emit socket event for real-time updates
-        await socket_manager.emit('calculation_completed', {
-            'id': str(result.inserted_id),
-            'namaRuas': data.namaRuas,
-            'LOS': los,
-            'DJ': round(dj, 4),
-            'totalKendaraan': data.mobil + data.bus + data.truk + data.motor,
-            'message': 'Perhitungan manual selesai - data dashboard akan diperbarui'
-        })
+        try:
+            await socket_manager.emit('calculation_completed', {
+                'id': str(result.inserted_id),
+                'namaRuas': data.namaRuas,
+                'LOS': los,
+                'DJ': round(dj, 4),
+                'totalKendaraan': data.mobil + data.bus + data.truk + data.motor,
+                'message': 'Perhitungan manual selesai - data dashboard akan diperbarui'
+            })
+            logger.info("Socket event 'calculation_completed' emitted successfully")
+        except Exception as socket_err:
+            logger.warning(f"Failed to emit socket event: {socket_err}")
         
         return {
             "success": True,
@@ -304,24 +308,18 @@ async def hitung_from_deteksi(
         logger.info(f"Calculation from detection saved: {result.inserted_id}")
         
         # Emit socket event for real-time updates
-        await socket_manager.emit('calculation_completed', {
-            'id': str(result.inserted_id),
-            'namaRuas': nama_ruas,
-            'LOS': los,
-            'DJ': round(dj, 4),
-            'totalKendaraan': total_kendaraan,
-            'message': 'Perhitungan selesai - data dashboard akan diperbarui'
-        })
-        
-        # Emit socket event for real-time updates
-        await socket_manager.emit('calculation_completed', {
-            'id': str(result.inserted_id),
-            'namaRuas': nama_ruas,
-            'LOS': los,
-            'DJ': round(dj, 4),
-            'totalKendaraan': total_kendaraan,
-            'message': 'Perhitungan selesai - data dashboard akan diperbarui'
-        })
+        try:
+            await socket_manager.emit('calculation_completed', {
+                'id': str(result.inserted_id),
+                'namaRuas': nama_ruas,
+                'LOS': los,
+                'DJ': round(dj, 4),
+                'totalKendaraan': total_kendaraan,
+                'message': 'Perhitungan selesai - data dashboard akan diperbarui'
+            })
+            logger.info("Socket event 'calculation_completed' emitted successfully")
+        except Exception as socket_err:
+            logger.warning(f"Failed to emit socket event: {socket_err}")
         
         return {
             "success": True,

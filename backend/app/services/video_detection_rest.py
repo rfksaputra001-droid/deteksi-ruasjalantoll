@@ -351,7 +351,9 @@ class VideoDetectionRestService:
             return result_doc
             
         except Exception as e:
-            logger.error(f"❌ Processing error: {str(e)}")
+            import traceback
+            logger.error(f"❌ Processing error for {tracking_id}: {str(e)}")
+            logger.error(f"🔍 Traceback: {traceback.format_exc()}")
             self.update_status(tracking_id, {
                 "status": "error",
                 "progress": 0,
@@ -381,10 +383,25 @@ class VideoDetectionRestService:
             "tracking_id": tracking_id
         })
         
-        # Start async task
-        asyncio.create_task(
+        # Start async task with error callback
+        task = asyncio.create_task(
             self.process_video_async(tracking_id, video_file_path, user_id, filename)
         )
+        
+        # Add error callback
+        def handle_error(t):
+            try:
+                t.result()
+            except Exception as e:
+                logger.error(f"❌ Task error for {tracking_id}: {e}")
+                self.update_status(tracking_id, {
+                    "status": "error",
+                    "progress": 0,
+                    "message": f"Task error: {str(e)}",
+                    "error": str(e)
+                })
+        
+        task.add_done_callback(handle_error)
         
         return tracking_id
 

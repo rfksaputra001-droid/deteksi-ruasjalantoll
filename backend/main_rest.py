@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config.database import connect_db, close_db
 from app.config.cloudinary import test_cloudinary_connection
 from app.routes import auth, admin, histori, dashboard, perhitungan, dashboard_backend, status_dashboard
-from app.routes.deteksi_rest import router as deteksi_router
+from app.routes.deteksi_rest import router as deteksi_router  # Use REST-only routes
 from app.utils.logger import logger
 
 
@@ -61,7 +61,7 @@ app = FastAPI(
 )
 
 
-# Simple CORS Configuration - Works with Vercel + Render
+# CORS Configuration - Simple and Direct
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -69,8 +69,10 @@ app.add_middleware(
         "http://localhost:5174",
         "http://localhost:3000",
         "https://deteksi-ruasjalantoll.vercel.app",
+        os.getenv("CLIENT_URL", ""),
+        os.getenv("FRONTEND_URL", ""),
     ],
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app",  # All Vercel deployments
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,9 +89,9 @@ async def root():
     import datetime
     return {
         "status": "online",
-        "message": "🚀 YOLO Detection Backend API",
+        "message": "🚀 YOLO Detection Backend API (REST)",
         "version": "3.0.0",
-        "mode": "REST-only (polling-based)",
+        "mode": "REST-only (no WebSocket)",
         "endpoints": {
             "health": "/health",
             "api": "/api",
@@ -117,14 +119,13 @@ async def health_check():
         
         from app.services.video_detection_rest import video_detection_rest_service
         model_status = "✅ Loaded" if video_detection_rest_service.model else "⏳ Not Loaded (lazy)"
-        active_tasks = len(video_detection_rest_service.processing_tasks)
         
         return {
             "status": "healthy",
             "timestamp": datetime.datetime.utcnow().isoformat(),
             "database": db_status,
             "yolo_model": model_status,
-            "active_processing": active_tasks,
+            "active_processing": len(video_detection_rest_service.processing_tasks),
             "mode": "REST-only"
         }
         
@@ -151,12 +152,14 @@ async def api_info():
             "dashboard": "/api/dashboard",
             "perhitungan": "/api/perhitungan"
         },
-        "detection_flow": [
-            "1. POST /api/deteksi/upload - Upload video, returns tracking_id",
-            "2. GET /api/deteksi/status/{tracking_id} - Poll every 2s for progress",
-            "3. Status: queued → processing → uploading → completed",
-            "4. When completed, result contains processed video URL"
-        ]
+        "notes": {
+            "detection_flow": [
+                "1. POST /api/deteksi/upload - Upload video, get tracking_id",
+                "2. GET /api/deteksi/status/{tracking_id} - Poll every 2s for progress",
+                "3. Status will be: queued → processing → uploading → completed",
+                "4. When status=completed, result contains processed video URL"
+            ]
+        }
     }
 
 
@@ -181,11 +184,10 @@ if __name__ == "__main__":
     
     print("\n")
     print("╔═══════════════════════════════════════════════════╗")
-    print("║    🚀 YOLO BACKEND - REST API ONLY 🚀             ║")
+    print("║    🚀 YOLO BACKEND SERVER - REST API ONLY 🚀      ║")
     print("╚═══════════════════════════════════════════════════╝")
     print(f"\n📍 Server: http://localhost:{PORT}")
     print("🔄 Mode: REST API with polling (NO WebSocket)")
-    print(f"📖 Docs: http://localhost:{PORT}/docs")
     print("\n✅ Server starting...\n")
     
     uvicorn.run(

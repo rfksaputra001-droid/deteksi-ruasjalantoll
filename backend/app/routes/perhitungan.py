@@ -14,7 +14,6 @@ from app.config.constants import (
 from app.models.perhitungan import ManualCalculationRequest
 from app.middleware.auth import get_current_user, get_surveyor_or_admin
 from app.utils.logger import logger
-from app.core.socket import socket_manager
 
 router = APIRouter()
 
@@ -184,20 +183,6 @@ async def hitung_manual(request: ManualCalculationRequest, user: dict = Depends(
         
         logger.info(f"Manual calculation saved: {result.inserted_id}")
         
-        # Emit socket event for real-time updates
-        try:
-            await socket_manager.emit('calculation_completed', {
-                'id': str(result.inserted_id),
-                'namaRuas': data.namaRuas,
-                'LOS': los,
-                'DJ': round(dj, 4),
-                'totalKendaraan': data.mobil + data.bus + data.truk + data.motor,
-                'message': 'Perhitungan manual selesai - data dashboard akan diperbarui'
-            })
-            logger.info("Socket event 'calculation_completed' emitted successfully")
-        except Exception as socket_err:
-            logger.warning(f"Failed to emit socket event: {socket_err}")
-        
         return {
             "success": True,
             "message": "Perhitungan berhasil",
@@ -306,20 +291,6 @@ async def hitung_from_deteksi(
         result = await perhitungan.insert_one(perhitungan_data)
         
         logger.info(f"Calculation from detection saved: {result.inserted_id}")
-        
-        # Emit socket event for real-time updates
-        try:
-            await socket_manager.emit('calculation_completed', {
-                'id': str(result.inserted_id),
-                'namaRuas': nama_ruas,
-                'LOS': los,
-                'DJ': round(dj, 4),
-                'totalKendaraan': total_kendaraan,
-                'message': 'Perhitungan selesai - data dashboard akan diperbarui'
-            })
-            logger.info("Socket event 'calculation_completed' emitted successfully")
-        except Exception as socket_err:
-            logger.warning(f"Failed to emit socket event: {socket_err}")
         
         return {
             "success": True,

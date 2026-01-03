@@ -4,7 +4,6 @@ import PropTypes from 'prop-types'
 import Card from '../components/UI/Card'
 import Table from '../components/UI/Table'
 import { API_ENDPOINTS, apiRequest } from '../config/api'
-import { useDeteksi } from '../context/DeteksiContext'
 
 // LOS colors
 const losColors = {
@@ -30,36 +29,6 @@ export default function Histori({ onLogout }) {
   useEffect(() => {
     fetchHistory()
   }, [currentPage])
-
-  const { socket } = useDeteksi()
-
-  // Listen for real-time calculation updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('calculation_completed', (data) => {
-        console.log('📋 Real-time calculation update:', data)
-        // Refresh history data when calculation completes
-        fetchHistory()
-        setSuccessMessage(data.message || 'Data histori diperbarui!')
-        setTimeout(() => setSuccessMessage(''), 3000)
-      })
-
-      return () => {
-        socket.off('calculation_completed')
-      }
-    }
-  }, [socket])
-        // Refresh history data when calculation completes
-        fetchHistory()
-        setSuccessMessage(data.message || 'Data histori diperbarui!')
-        setTimeout(() => setSuccessMessage(''), 3000)
-      })
-
-      return () => {
-        socket.off('calculation_completed')
-      }
-    }
-  }, [socket])
 
   const fetchHistory = async () => {
     try {

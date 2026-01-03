@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import Card from '../components/UI/Card'
 import Table from '../components/UI/Table'
 import { API_ENDPOINTS, apiRequest } from '../config/api'
-import { useDeteksi } from '../context/DeteksiContext'
 
 // Icons
 const IconUpload = () => (
@@ -95,42 +94,6 @@ export default function Perhitungan({ onLogout }) {
       loadDeteksiAvailable()
     }
   }, [mode])
-
-  const { socket } = useDeteksi()
-
-  // Listen for real-time calculation updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('calculation_completed', (data) => {
-        console.log('🧮 Real-time calculation update:', data)
-        // Refresh calculation history when calculation completes
-        loadPerhitunganHistory()
-        setSuccess(data.message || 'Perhitungan selesai - data diperbarui!')
-        setTimeout(() => setSuccess(''), 3000)
-      })
-
-      return () => {
-        socket.off('calculation_completed')
-      }
-    }
-  }, [socket])
-
-  // Listen for real-time calculation updates
-  useEffect(() => {
-    if (socket) {
-      socket.on('calculation_completed', (data) => {
-        console.log('🧮 Real-time calculation update:', data)
-        // Refresh calculation history when calculation completes
-        loadPerhitunganHistory()
-        setSuccess(data.message || 'Perhitungan selesai - data diperbarui!')
-        setTimeout(() => setSuccess(''), 3000)
-      })
-
-      return () => {
-        socket.off('calculation_completed')
-      }
-    }
-  }, [socket])
 
   const loadReferensi = async () => {
     try {

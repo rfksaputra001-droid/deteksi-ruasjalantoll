@@ -1,15 +1,8 @@
-// API Configuration with enhanced CORS handling
+// API Configuration - REST Only (No WebSocket)
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-
-// Socket.IO URL - use same protocol as API base URL
-export const SOCKET_URL = (() => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-  return baseUrl; // Socket.IO client will handle the protocol conversion
-})();
 
 console.log('🔧 API Config:', { 
   API_BASE_URL, 
-  SOCKET_URL,
   env: import.meta.env.VITE_API_BASE_URL,
   mode: import.meta.env.MODE,
   origin: window.location.origin

@@ -25,6 +25,23 @@ export default function Dashboard({ onLogout }) {
     fetchDashboardData()
   }, [selectedDate]) // Reload saat tanggal berubah
 
+  const { socket } = useDeteksi()
+
+  // Listen for real-time calculation updates
+  useEffect(() => {
+    if (socket) {
+      socket.on('calculation_completed', (data) => {
+        console.log('📊 Real-time calculation update:', data)
+        // Refresh dashboard data when calculation completes
+        fetchDashboardData()
+      })
+
+      return () => {
+        socket.off('calculation_completed')
+      }
+    }
+  }, [socket])
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true)

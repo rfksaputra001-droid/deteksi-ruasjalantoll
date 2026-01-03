@@ -17,10 +17,16 @@ sio = socketio.AsyncServer(
         "http://localhost:5174", 
         "http://localhost:3000",
         "https://deteksi-ruasjalantoll.vercel.app",
+        "https://deteksi-ruasjalantoll-*.vercel.app",
         "https://*.vercel.app"  # Allow all Vercel preview URLs
     ],
+    cors_credentials=True,
+    allow_upgrades=True,
+    transports=['polling', 'websocket'],
     logger=True,  # Enable for debugging
-    engineio_logger=True
+    engineio_logger=True,
+    ping_timeout=60,
+    ping_interval=25
 )
 
 # Create ASGI app

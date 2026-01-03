@@ -19,6 +19,105 @@ from app.utils.logger import logger
 router = APIRouter()
 
 
+@router.post("/upload-model")
+async def upload_custom_model(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user)
+):
+    """Upload custom YOLO model for detection"""
+    try:
+        # Only allow admin or surveyor to upload models
+        if user.get("role") not in ["admin", "surveyor"]:
+            raise HTTPException(
+                status_code=403,
+                detail={"success": False, "message": "Hanya admin dan surveyor yang dapat mengunggah model"}
+            )
+        
+        # Validate file
+        if not file.filename.endswith('.pt'):
+            raise HTTPException(
+                status_code=400,
+                detail={"success": False, "message": "File harus berupa model YOLO (.pt)"}
+            )
+        
+        # Save custom model
+        model_path = f"/tmp/models/custom_{user['_id']}.pt"
+        os.makedirs("/tmp/models", exist_ok=True)
+        
+        content = await file.read()
+        with open(model_path, "wb") as f:
+            f.write(content)
+        
+        # Test model loading
+        try:
+            from ultralytics import YOLO
+            test_model = YOLO(model_path)
+            class_names = test_model.names
+            logger.info(f"✅ Custom model uploaded successfully: {class_names}")
+        except Exception as e:
+            os.remove(model_path)
+            raise HTTPException(
+                status_code=400,
+                detail={"success": False, "message": f"Model tidak valid: {str(e)}"}
+            )
+        
+        # Update video detection service to use new model
+        video_detection_service.custom_model_path = model_path
+        video_detection_service.model_path = model_path
+        video_detection_service.model = None  # Force reload
+        
+        logger.info(f"🎯 Custom model uploaded by {user.get('email', 'unknown')}: {file.filename}")
+        
+        return {
+            "success": True,
+            "message": "Model kustom berhasil diunggah dan akan digunakan untuk deteksi selanjutnya",
+            "data": {
+                "filename": file.filename,
+                "classes": class_names,
+                "total_classes": len(class_names)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Upload model error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "message": f"Gagal mengunggah model: {str(e)}"}
+        )
+
+
+@router.get("/model-info")
+async def get_model_info(user: dict = Depends(get_current_user)):
+    """Get current model information"""
+    try:
+        model_info = {
+            "current_model": video_detection_service.model_path,
+            "is_custom": video_detection_service.custom_model_path is not None,
+            "model_loaded": video_detection_service.model is not None
+        }
+        
+        if video_detection_service.model:
+            try:
+                model_info["classes"] = video_detection_service.model.names
+                model_info["total_classes"] = len(video_detection_service.model.names)
+            except:
+                model_info["classes"] = "Unable to read class names"
+        
+        return {
+            "success": True,
+            "data": model_info
+        }
+        
+    except Exception as e:
+        logger.error(f"Get model info error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail={"success": False, "message": str(e)}
+        )
+
+
 @router.post("/upload")
 async def upload_video(
     file: UploadFile = File(...),

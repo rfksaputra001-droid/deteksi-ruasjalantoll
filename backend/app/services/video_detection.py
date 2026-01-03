@@ -25,20 +25,71 @@ class VideoDetectionService:
     
     def __init__(self):
         self.model = None
-        self.model_path = "yolov8n.pt"  # Will auto-download
+        self.custom_model_path = None
+        self.model_path = "yolov8n.pt"  # Default model
         self.processing_tasks: Dict[str, asyncio.Task] = {}
+        
+        # Check for custom model in models directory
+        custom_models = [
+            "/tmp/models/best.pt",
+            "/tmp/models/vehicle-night-yolo.pt", 
+            "/tmp/models/custom.pt",
+            "models/best.pt",
+            "models/vehicle-night-yolo.pt",
+            "backend/models/best.pt"
+        ]
+        
+        for model_path in custom_models:
+            if os.path.exists(model_path):
+                self.custom_model_path = model_path
+                self.model_path = model_path
+                logger.info(f"🎯 Found custom model: {model_path}")
+                break
         
     async def initialize_model(self):
         """Initialize YOLO model with error handling"""
         try:
             if self.model is None:
-                logger.info("🤖 Loading YOLO model...")
+                if self.custom_model_path:
+                    logger.info(f"🚀 Loading CUSTOM YOLO model: {self.custom_model_path}")
+                else:
+                    logger.info(f"🤖 Loading default YOLO model: {self.model_path}")
                 self.model = YOLO(self.model_path)
                 logger.info("✅ YOLO model loaded successfully")
             return True
         except Exception as e:
             logger.error(f"❌ Failed to load YOLO model: {e}")
             return False
+    
+    def _normalize_vehicle_type(self, vehicle_type: str) -> str:
+        """Normalize vehicle type from custom models to standard categories"""
+        vehicle_type_lower = vehicle_type.lower()
+        
+        # Map common vehicle type variations
+        if any(keyword in vehicle_type_lower for keyword in ['car', 'mobil', 'sedan', 'suv']):
+            return "mobil"
+        elif any(keyword in vehicle_type_lower for keyword in ['motorcycle', 'motor', 'bike']):
+            return "motor"  
+        elif any(keyword in vehicle_type_lower for keyword in ['truck', 'truk']):
+            return "truk"
+        elif any(keyword in vehicle_type_lower for keyword in ['bus']):
+            return "bus"
+        else:
+            return vehicle_type  # Keep original if no match
+    
+    def _get_class_color(self, vehicle_type: str) -> tuple:
+        """Get color for class visualization"""
+        color_map = {
+            "mobil": (0, 255, 0),    # Green
+            "motor": (255, 0, 0),    # Red  
+            "truk": (0, 0, 255),     # Blue
+            "bus": (255, 255, 0),    # Yellow
+            "car": (0, 255, 0),      # Green
+            "motorcycle": (255, 0, 0),  # Red
+            "truck": (0, 0, 255),    # Blue
+        }
+        
+        return color_map.get(vehicle_type.lower(), (128, 128, 128))  # Gray for unknown
     
     async def process_video(self, 
                           tracking_id: str, 
@@ -109,7 +160,11 @@ class VideoDetectionService:
                 frame_count += 1
                 
                 # Run YOLO detection on frame
-                results = self.model(frame, conf=0.25, classes=[1, 2, 3, 5, 6, 7])  # Vehicle classes
+                # For custom models, use all classes; for default, filter vehicle classes
+                if self.custom_model_path:
+                    results = self.model(frame, conf=0.25)  # Use all classes from custom model
+                else:
+                    results = self.model(frame, conf=0.25, classes=[1, 2, 3, 5, 6, 7])  # COCO vehicle classes
                 
                 # Process detections
                 frame_detections = []
@@ -124,24 +179,35 @@ class VideoDetectionService:
                             confidence = box.conf[0].cpu().numpy()
                             class_id = int(box.cls[0].cpu().numpy())
                             
-                            # Map COCO classes to vehicle types
-                            class_map = {1: "mobil", 2: "motor", 3: "mobil", 5: "bus", 6: "truk", 7: "truk"}
-                            vehicle_type = class_map.get(class_id, "unknown")
+                            # Dynamic class mapping
+                            if self.custom_model_path:
+                                # For custom models, try to get class names from model
+                                try:
+                                    class_names = self.model.names
+                                    vehicle_type = class_names.get(class_id, f"class_{class_id}")
+                                except:
+                                    vehicle_type = f"detected_{class_id}"
+                            else:
+                                # Default COCO class mapping
+                                class_map = {1: "mobil", 2: "motor", 3: "mobil", 5: "bus", 6: "truk", 7: "truk"}
+                                vehicle_type = class_map.get(class_id, "unknown")
                             
                             if vehicle_type != "unknown":
-                                # Count vehicles
-                                vehicle_counts[vehicle_type] += 1
+                                # Count vehicles (normalize custom class names)
+                                normalized_type = self._normalize_vehicle_type(vehicle_type)
+                                vehicle_counts[normalized_type] = vehicle_counts.get(normalized_type, 0) + 1
                                 
                                 # Store detection
                                 frame_detections.append({
                                     "bbox": [float(x1), float(y1), float(x2), float(y2)],
                                     "confidence": float(confidence),
                                     "class": vehicle_type,
+                                    "class_id": class_id,
                                     "frame": frame_count
                                 })
                                 
-                                # Draw bounding box on frame
-                                color = (0, 255, 0) if vehicle_type == "mobil" else (255, 0, 0) if vehicle_type == "motor" else (0, 0, 255)
+                                # Draw bounding box on frame with dynamic color
+                                color = self._get_class_color(vehicle_type)
                                 cv2.rectangle(annotated_frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
                                 cv2.putText(annotated_frame, f"{vehicle_type} {confidence:.2f}", 
                                           (int(x1), int(y1-10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)

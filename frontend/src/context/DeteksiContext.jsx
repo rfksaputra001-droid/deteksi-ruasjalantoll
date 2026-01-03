@@ -77,28 +77,43 @@ export function DeteksiProvider({ children }) {
 
   // Setup Socket.IO connection - only once
   useEffect(() => {
+    console.log('🔗 Initializing Socket.IO with URL:', SOCKET_URL)
+    
     const socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
       upgrade: true,
       rememberUpgrade: true,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
-      timeout: 20000,
+      reconnectionDelayMax: 5000,
+      timeout: 30000,
       forceNew: false,
+      autoConnect: true,
+      withCredentials: true,
       path: '/socket.io/'
     })
 
     socket.on('connect', () => {
-      console.log('🔌 Socket.IO connected (Global):', socket.id)
+      console.log('🔌 Socket.IO connected successfully:', socket.id)
+      console.log('Transport:', socket.io.engine.transport.name)
     })
 
-    socket.on('disconnect', () => {
-      console.log('❌ Socket.IO disconnected (Global)')
+    socket.on('disconnect', (reason) => {
+      console.log('❌ Socket.IO disconnected:', reason)
     })
 
     socket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err.message)
+      console.error('❌ Socket.IO connection error:', err.message)
+      console.error('Error details:', err)
+    })
+
+    socket.on('reconnect', (attemptNumber) => {
+      console.log('🔄 Socket.IO reconnected after', attemptNumber, 'attempts')
+    })
+
+    socket.on('reconnect_error', (err) => {
+      console.error('❌ Socket.IO reconnect error:', err.message)
     })
 
     // Global listener for detection status changes

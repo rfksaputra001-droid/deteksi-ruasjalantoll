@@ -38,7 +38,6 @@ export default function Deteksi({ onLogout }) {
   const {
     detectionData,
     videoPreview,
-    setVideoPreview,
     selectedDetection,
     setSelectedDetection,
     currentPage,
@@ -46,20 +45,15 @@ export default function Deteksi({ onLogout }) {
     totalPages,
     totalItems,
     uploading,
-    setUploading,
     error,
-    setError,
     successMessage,
-    setSuccessMessage,
     uploadProgress,
-    setUploadProgress,
-    realTimeProgress,
-    setRealTimeProgress,
-    setCurrentTrackingId,
-    itemsPerPage,
+    processingStatus,
     fetchDetections,
-    handleDeleteDetection,
-    handleViewResult,
+    uploadVideo,
+    handleVideoSelect,
+    clearVideoPreview,
+    deleteDetection,
   } = useDeteksi()
 
   const columns = [
@@ -110,7 +104,7 @@ export default function Deteksi({ onLogout }) {
           {/* Tombol lihat hasil YOLO (video dengan bounding box) */}
           {row.status === 'completed' && row.cloudinaryVideoUrl && (
             <button
-              onClick={() => handleViewResult(row)}
+              onClick={() => setSelectedDetection(row)}
               className="bg-green-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-green-700 transition-colors"
               title="Lihat video hasil deteksi YOLO"
             >
@@ -129,7 +123,7 @@ export default function Deteksi({ onLogout }) {
           )}
           {(row.status === 'completed' || row.status === 'failed') && (
             <button
-              onClick={() => handleDeleteDetection(row._id)}
+              onClick={() => deleteDetection(row._id)}
               className="bg-red-600 text-white px-3 py-1 rounded text-xs font-medium hover:bg-red-700 transition-colors"
             >
               Hapus
@@ -144,76 +138,16 @@ export default function Deteksi({ onLogout }) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // File validation
-    const maxSize = 5 * 1024 * 1024 * 1024 // 5GB
-    const allowedTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/mkv', 'video/x-msvideo', 'video/quicktime', 'video/x-matroska']
+    // Use context's handleVideoSelect for validation and preview
+    handleVideoSelect(file)
     
-    if (file.size > maxSize) {
-      setError('File terlalu besar. Maksimum 5GB.')
-      return
-    }
-
-    // Check file extension if MIME type is not recognized
-    const fileExt = file.name.split('.').pop().toLowerCase()
-    const allowedExts = ['mp4', 'avi', 'mov', 'mkv']
-    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
-      setError('Format file tidak didukung. Gunakan MP4, AVI, MOV, atau MKV.')
-      return
-    }
-
-    setUploading(true)
-    setError('')
-    setSuccessMessage('')
-    setUploadProgress('Menyiapkan upload...')
-    setRealTimeProgress({ stage: 'preparing', progress: 0, message: 'Menyiapkan upload...' })
-    // Clear previous preview
-    setVideoPreview(null)
-    setSelectedDetection({ isProcessing: true, progress: 0 })
-
+    // Upload using context's uploadVideo which handles polling
     try {
-      // Upload to backend
-      const formData = new FormData()
-      formData.append('file', file)
-
-      setUploadProgress('Mengirim video ke server...')
-
-      const response = await fetch(API_ENDPOINTS.UPLOAD_VIDEO, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: formData
-      })
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type')
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text()
-        throw new Error(text || 'Server error - response bukan JSON')
-      }
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Upload failed')
-      }
-
-      if (result.success || result.status === 'success') {
-        // Get tracking ID and start listening for progress
-        const trackingId = result.data.trackingId
-        setCurrentTrackingId(trackingId)
-        setUploadProgress('Video dikirim! Memulai proses deteksi...')
-        
-        // Socket will handle the rest via real-time updates
-        console.log('🎯 Tracking detection:', trackingId)
-      }
-
+      await uploadVideo(file)
+      // Context will handle polling automatically
+      console.log('✅ Video upload initiated with polling')
     } catch (err) {
-      setError(err.message || 'Gagal mengupload video')
-      setUploading(false)
-      setRealTimeProgress(null)
-      setSelectedDetection(null)
-      console.error('Upload error:', err)
+      console.error('❌ Upload error:', err)
     }
   }
 
@@ -238,13 +172,13 @@ export default function Deteksi({ onLogout }) {
         </div>
       )}
 
-      {/* Real-time Progress Bar */}
-      {realTimeProgress && (
+      {/* REST Polling Progress Bar */}
+      {(uploading || processingStatus) && (
         <Card className="!p-3 sm:!p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
           <div className="space-y-2 sm:space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
-                {realTimeProgress.stage !== 'completed' && realTimeProgress.stage !== 'error' && (
+                {processingStatus?.status !== 'completed' && processingStatus?.status !== 'error' && (
                   <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -260,46 +194,26 @@ export default function Deteksi({ onLogout }) {
                   {realTimeProgress.stage === 'error' && '❌ Error'}
                 </span>
               </div>
-              <span className="text-sm font-bold text-blue-600">{realTimeProgress.progress}%</span>
+              <span className="text-sm font-bold text-blue-600">
+                {processingStatus?.progress || 0}%
+              </span>
             </div>
             
             {/* Progress Bar */}
             <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
               <div 
                 className={`h-3 rounded-full transition-all duration-300 ${
-                  realTimeProgress.stage === 'error' ? 'bg-red-500' :
-                  realTimeProgress.stage === 'completed' ? 'bg-green-500' :
+                  processingStatus?.status === 'error' ? 'bg-red-500' :
+                  processingStatus?.status === 'completed' ? 'bg-green-500' :
                   'bg-gradient-to-r from-blue-500 to-indigo-500'
                 }`}
-                style={{ width: `${realTimeProgress.progress}%` }}
+                style={{ width: `${processingStatus?.progress || 0}%` }}
               />
             </div>
             
-            <p className="text-sm text-gray-600">{realTimeProgress.message}</p>
-            
-            {/* Enhanced Progress Info */}
-            <div className="flex flex-wrap gap-4 text-xs text-gray-600">
-              {realTimeProgress.frameProgress !== undefined && (
-                <span className="bg-blue-100 px-2 py-1 rounded">
-                  🎬 Frame: {realTimeProgress.frameProgress}%
-                </span>
-              )}
-              {realTimeProgress.fps && (
-                <span className="bg-green-100 px-2 py-1 rounded">
-                  ⚡ {realTimeProgress.fps} fps
-                </span>
-              )}
-              {realTimeProgress.eta && (
-                <span className="bg-orange-100 px-2 py-1 rounded">
-                  ⏱️ ETA: {realTimeProgress.eta}
-                </span>
-              )}
-              {realTimeProgress.countingData && (
-                <span className="bg-purple-100 px-2 py-1 rounded">
-                  🚗 Total: {realTimeProgress.countingData.total} (Kiri: {realTimeProgress.countingData.kiri}, Kanan: {realTimeProgress.countingData.kanan})
-                </span>
-              )}
-            </div>
+            <p className="text-sm text-gray-600">
+              {processingStatus?.message || uploadProgress || 'Memproses...'}
+            </p>
           </div>
         </Card>
       )}
